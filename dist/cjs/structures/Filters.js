@@ -35,54 +35,58 @@ class FilterManager {
     /** The Filter Data sent to Lavalink, only if the filter is enabled (ofc.) */
     data = {
         lowPass: {
-            smoothing: 0
+            smoothing: 0,
         },
         karaoke: {
             level: 0,
             monoLevel: 0,
             filterBand: 0,
-            filterWidth: 0
+            filterWidth: 0,
         },
         timescale: {
             speed: 1,
             pitch: 1,
-            rate: 1 // 0 = x
+            rate: 1, // 0 = x
         },
         rotation: {
-            rotationHz: 0
+            rotationHz: 0,
         },
         tremolo: {
             frequency: 0,
-            depth: 0 // 0 < x = 1
+            depth: 0, // 0 < x = 1
         },
         vibrato: {
             frequency: 0,
-            depth: 0 // 0 < x <= 1
+            depth: 0, // 0 < x <= 1
         },
         pluginFilters: {
             "lavalink-filter-plugin": {
                 echo: {
                     delay: 0,
-                    decay: 0 // 0 < 1
+                    decay: 0, // 0 < 1
                 },
                 reverb: {
                     delays: [],
-                    gains: [] // [0.84, 0.83, 0.82, 0.81]
-                }
+                    gains: [], // [0.84, 0.83, 0.82, 0.81]
+                },
             },
-            "high-pass": { // Cuts off frequencies lower than the specified {cutoffFrequency}.
+            "high-pass": {
+            // Cuts off frequencies lower than the specified {cutoffFrequency}.
             // "cutoffFrequency": 1475, // Integer, higher than zero, in Hz.
             // "boostFactor": 1.0    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
             },
-            "low-pass": { // Cuts off frequencies higher than the specified {cutoffFrequency}.
+            "low-pass": {
+            // Cuts off frequencies higher than the specified {cutoffFrequency}.
             // "cutoffFrequency": 284, // Integer, higher than zero, in Hz.
             // "boostFactor": 1.24389    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
             },
-            "normalization": { // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}. 
+            normalization: {
+            // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}.
             // "maxAmplitude": 0.6327, // Float, within the range of 0.0 - 1.0. A value of 0.0 mutes the output.
-            // "adaptive": true    // false 
+            // "adaptive": true    // false
             },
-            "echo": { // Self-explanatory; provides an echo effect.
+            echo: {
+            // Self-explanatory; provides an echo effect.
             // "echoLength": 0.5649, // Float, higher than 0.0, in seconds (1.0 = 1 second).
             // "decay": 0.4649       // Float, within the range of 0.0 - 1.0. A value of 1.0 means no decay, and a value of 0.0 means
             },
@@ -142,7 +146,7 @@ class FilterManager {
             delete sendData.rotation;
         if (this.filters.audioOutput === "stereo")
             delete sendData.channelMix;
-        if (Object.values(this.data.timescale).every(v => v === 1))
+        if (Object.values(this.data.timescale).every((v) => v === 1))
             delete sendData.timescale;
         if (!this.player.node.sessionId)
             throw new Error("The Lavalink-Node is either not ready or not up to date");
@@ -164,7 +168,7 @@ class FilterManager {
             guildId: this.player.guildId,
             playerOptions: {
                 filters: sendData,
-            }
+            },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
         if (this.player.options.instaUpdateFiltersFix === true)
@@ -180,7 +184,7 @@ class FilterManager {
         this.filters.rotation = this.data.rotation.rotationHz !== 0;
         this.filters.vibrato = this.data.vibrato.frequency !== 0 || this.data.vibrato.depth !== 0;
         this.filters.tremolo = this.data.tremolo.frequency !== 0 || this.data.tremolo.depth !== 0;
-        const lavalinkFilterData = (this.data.pluginFilters?.["lavalink-filter-plugin"] || { echo: { decay: this.data.pluginFilters?.echo?.decay && !this.data.pluginFilters?.echo?.echoLength ? this.data.pluginFilters.echo.decay : 0, delay: this.data.pluginFilters?.echo?.delay || 0 }, reverb: { gains: [], delays: [], ...((this.data.pluginFilters.reverb) || {}) } });
+        const lavalinkFilterData = this.data.pluginFilters?.["lavalink-filter-plugin"] || { echo: { decay: this.data.pluginFilters?.echo?.decay && !this.data.pluginFilters?.echo?.echoLength ? this.data.pluginFilters.echo.decay : 0, delay: this.data.pluginFilters?.echo?.delay || 0 }, reverb: { gains: [], delays: [], ...(this.data.pluginFilters.reverb || {}) } };
         this.filters.lavalinkFilterPlugin.echo = lavalinkFilterData.echo.decay !== 0 || lavalinkFilterData.echo.delay !== 0;
         this.filters.lavalinkFilterPlugin.reverb = lavalinkFilterData.reverb?.delays?.length !== 0 || lavalinkFilterData.reverb?.gains?.length !== 0;
         this.filters.lavalinkLavaDspxPlugin.highPass = Object.values(this.data.pluginFilters["high-pass"] || {}).length > 0;
@@ -188,10 +192,10 @@ class FilterManager {
         this.filters.lavalinkLavaDspxPlugin.normalization = Object.values(this.data.pluginFilters.normalization || {}).length > 0;
         this.filters.lavalinkLavaDspxPlugin.echo = Object.values(this.data.pluginFilters.echo || {}).length > 0 && typeof this.data.pluginFilters?.echo?.delay === "undefined";
         this.filters.lowPass = this.data.lowPass.smoothing !== 0;
-        this.filters.karaoke = Object.values(this.data.karaoke).some(v => v !== 0);
+        this.filters.karaoke = Object.values(this.data.karaoke).some((v) => v !== 0);
         if ((this.filters.nightcore || this.filters.vaporwave) && oldFilterTimescale) {
             if (oldFilterTimescale.pitch !== this.data.timescale.pitch || oldFilterTimescale.rate !== this.data.timescale.rate || oldFilterTimescale.speed !== this.data.timescale.speed) {
-                this.filters.custom = Object.values(this.data.timescale).some(v => v !== 1);
+                this.filters.custom = Object.values(this.data.timescale).some((v) => v !== 1);
                 this.filters.nightcore = false;
                 this.filters.vaporwave = false;
             }
@@ -221,18 +225,18 @@ class FilterManager {
         for (const [key, value] of Object.entries({
             volume: 1,
             lowPass: {
-                smoothing: 0
+                smoothing: 0,
             },
             karaoke: {
                 level: 0,
                 monoLevel: 0,
                 filterBand: 0,
-                filterWidth: 0
+                filterWidth: 0,
             },
             timescale: {
                 speed: 1,
                 pitch: 1,
-                rate: 1 // 0 = x
+                rate: 1, // 0 = x
             },
             pluginFilters: {
                 "lavalink-filter-plugin": {
@@ -243,35 +247,39 @@ class FilterManager {
                     reverb: {
                     // delays: [], // [0.037, 0.042, 0.048, 0.053]
                     // gains: [] // [0.84, 0.83, 0.82, 0.81]
-                    }
+                    },
                 },
-                "high-pass": { // Cuts off frequencies lower than the specified {cutoffFrequency}.
+                "high-pass": {
+                // Cuts off frequencies lower than the specified {cutoffFrequency}.
                 // "cutoffFrequency": 1475, // Integer, higher than zero, in Hz.
                 // "boostFactor": 1.0    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
                 },
-                "low-pass": { // Cuts off frequencies higher than the specified {cutoffFrequency}.
+                "low-pass": {
+                // Cuts off frequencies higher than the specified {cutoffFrequency}.
                 // "cutoffFrequency": 284, // Integer, higher than zero, in Hz.
                 // "boostFactor": 1.24389    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
                 },
-                "normalization": { // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}. 
+                normalization: {
+                // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}.
                 // "maxAmplitude": 0.6327, // Float, within the range of 0.0 - 1.0. A value of 0.0 mutes the output.
-                // "adaptive": true    // false 
+                // "adaptive": true    // false
                 },
-                "echo": { // Self-explanatory; provides an echo effect.
+                echo: {
+                // Self-explanatory; provides an echo effect.
                 // "echoLength": 0.5649, // Float, higher than 0.0, in seconds (1.0 = 1 second).
                 // "decay": 0.4649       // Float, within the range of 0.0 - 1.0. A value of 1.0 means no decay, and a value of 0.0 means
                 },
             },
             rotation: {
-                rotationHz: 0
+                rotationHz: 0,
             },
             tremolo: {
                 frequency: 0,
-                depth: 0 // 0 < x = 1
+                depth: 0, // 0 < x = 1
             },
             vibrato: {
                 frequency: 0,
-                depth: 0 // 0 < x = 1
+                depth: 0, // 0 < x = 1
             },
             channelMix: exports.audioOutputsData.stereo,
         })) {
@@ -430,7 +438,7 @@ class FilterManager {
     }
     lavalinkLavaDspxPlugin = {
         toggleLowPass: async (boostFactor = 1.0, cutoffFrequency = 80) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavadspx-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavadspx-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavadspx plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("low-pass"))
                 throw new Error("Node#Info#filters does not include the 'low-pass' Filter (Node has it not enable)");
@@ -446,7 +454,7 @@ class FilterManager {
             else {
                 this.data.pluginFilters["low-pass"] = {
                     boostFactor: boostFactor,
-                    cutoffFrequency: cutoffFrequency
+                    cutoffFrequency: cutoffFrequency,
                 };
             }
             this.filters.lavalinkLavaDspxPlugin.lowPass = !this.filters.lavalinkLavaDspxPlugin.lowPass;
@@ -454,7 +462,7 @@ class FilterManager {
             return this.filters.lavalinkLavaDspxPlugin.lowPass;
         },
         toggleHighPass: async (boostFactor = 1.0, cutoffFrequency = 80) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavadspx-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavadspx-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavadspx plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("high-pass"))
                 throw new Error("Node#Info#filters does not include the 'high-pass' Filter (Node has it not enable)");
@@ -470,7 +478,7 @@ class FilterManager {
             else {
                 this.data.pluginFilters["high-pass"] = {
                     boostFactor: boostFactor,
-                    cutoffFrequency: cutoffFrequency
+                    cutoffFrequency: cutoffFrequency,
                 };
             }
             this.filters.lavalinkLavaDspxPlugin.highPass = !this.filters.lavalinkLavaDspxPlugin.highPass;
@@ -478,7 +486,7 @@ class FilterManager {
             return this.filters.lavalinkLavaDspxPlugin.highPass;
         },
         toggleNormalization: async (maxAmplitude = 0.75, adaptive = true) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavadspx-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavadspx-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavadspx plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("normalization"))
                 throw new Error("Node#Info#filters does not include the 'normalization' Filter (Node has it not enable)");
@@ -494,7 +502,7 @@ class FilterManager {
             else {
                 this.data.pluginFilters.normalization = {
                     adaptive: adaptive,
-                    maxAmplitude: maxAmplitude
+                    maxAmplitude: maxAmplitude,
                 };
             }
             this.filters.lavalinkLavaDspxPlugin.normalization = !this.filters.lavalinkLavaDspxPlugin.normalization;
@@ -502,7 +510,7 @@ class FilterManager {
             return this.filters.lavalinkLavaDspxPlugin.normalization;
         },
         toggleEcho: async (decay = 0.5, echoLength = 0.5) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavadspx-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavadspx-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavadspx plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("echo"))
                 throw new Error("Node#Info#filters does not include the 'echo' Filter (Node has it not enable)");
@@ -518,13 +526,13 @@ class FilterManager {
             else {
                 this.data.pluginFilters.echo = {
                     decay: decay,
-                    echoLength: echoLength
+                    echoLength: echoLength,
                 };
             }
             this.filters.lavalinkLavaDspxPlugin.echo = !this.filters.lavalinkLavaDspxPlugin.echo;
             await this.applyPlayerFilters();
             return this.filters.lavalinkLavaDspxPlugin.echo;
-        }
+        },
     };
     lavalinkFilterPlugin = {
         /**
@@ -534,7 +542,7 @@ class FilterManager {
          * @returns
          */
         toggleEcho: async (delay = 4, decay = 0.8) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavalink-filter-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavalink-filter-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavalink-filter-plugin plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("echo"))
                 throw new Error("Node#Info#filters does not include the 'echo' Filter (Node has it not enable aka not installed!)");
@@ -559,7 +567,7 @@ class FilterManager {
          * @returns
          */
         toggleReverb: async (delays = [0.037, 0.042, 0.048, 0.053], gains = [0.84, 0.83, 0.82, 0.81]) => {
-            if (this.player.node.info && !this.player.node.info?.plugins?.find(v => v.name === "lavalink-filter-plugin"))
+            if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavalink-filter-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavalink-filter-plugin plugin");
             if (this.player.node.info && !this.player.node.info?.filters?.includes("reverb"))
                 throw new Error("Node#Info#filters does not include the 'reverb' Filter (Node has it not enable aka not installed!)");
@@ -576,7 +584,7 @@ class FilterManager {
             this.filters.lavalinkFilterPlugin.reverb = !this.filters.lavalinkFilterPlugin.reverb;
             await this.applyPlayerFilters();
             return this.filters.lavalinkFilterPlugin.reverb;
-        }
+        },
     };
     /**
      * Enables / Disables a Nightcore-like filter Effect. Disables/Overrides both: custom and Vaporwave Filter
@@ -637,13 +645,13 @@ class FilterManager {
     }
     /** Function to find out if currently there is a custom timescamle etc. filter applied */
     isCustomFilterActive() {
-        this.filters.custom = !this.filters.nightcore && !this.filters.vaporwave && Object.values(this.data.timescale).some(d => d !== 1);
+        this.filters.custom = !this.filters.nightcore && !this.filters.vaporwave && Object.values(this.data.timescale).some((d) => d !== 1);
         return this.filters.custom;
     }
     /**
-   * Sets the players equalizer band on-top of the existing ones.
-   * @param bands
-   */
+     * Sets the players equalizer band on-top of the existing ones.
+     * @param bands
+     */
     async setEQ(bands) {
         if (!Array.isArray(bands))
             bands = [bands];
@@ -657,8 +665,8 @@ class FilterManager {
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
-                filters: { equalizer: this.equalizerBands }
-            }
+                filters: { equalizer: this.equalizerBands },
+            },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
         if (this.player.options.instaUpdateFiltersFix === true)
@@ -674,24 +682,28 @@ exports.FilterManager = FilterManager;
 /**  The audio Outputs Data map declaration */
 exports.audioOutputsData = {
     mono: {
+        // totalLeft: 1, totalRight: 1
         leftToLeft: 0.5,
         leftToRight: 0.5,
         rightToLeft: 0.5,
         rightToRight: 0.5,
     },
     stereo: {
+        // totalLeft: 1, totalRight: 1
         leftToLeft: 1,
         leftToRight: 0,
         rightToLeft: 0,
         rightToRight: 1,
     },
     left: {
+        // totalLeft: 1, totalRight: 0
         leftToLeft: 1,
         leftToRight: 0,
         rightToLeft: 1,
         rightToRight: 0,
     },
     right: {
+        // totalLeft: 0, totalRight: 1
         leftToLeft: 0,
         leftToRight: 1,
         rightToLeft: 0,
@@ -791,39 +803,39 @@ exports.EQList = {
     ],
     /** Makes the Music sound like rock music / sound rock music better */
     Rock: [
-        { band: 0, gain: 0.300 },
-        { band: 1, gain: 0.250 },
-        { band: 2, gain: 0.200 },
-        { band: 3, gain: 0.100 },
-        { band: 4, gain: 0.050 },
-        { band: 5, gain: -0.050 },
-        { band: 6, gain: -0.150 },
-        { band: 7, gain: -0.200 },
-        { band: 8, gain: -0.100 },
-        { band: 9, gain: -0.050 },
-        { band: 10, gain: 0.050 },
-        { band: 11, gain: 0.100 },
-        { band: 12, gain: 0.200 },
-        { band: 13, gain: 0.250 },
-        { band: 14, gain: 0.300 },
+        { band: 0, gain: 0.3 },
+        { band: 1, gain: 0.25 },
+        { band: 2, gain: 0.2 },
+        { band: 3, gain: 0.1 },
+        { band: 4, gain: 0.05 },
+        { band: 5, gain: -0.05 },
+        { band: 6, gain: -0.15 },
+        { band: 7, gain: -0.2 },
+        { band: 8, gain: -0.1 },
+        { band: 9, gain: -0.05 },
+        { band: 10, gain: 0.05 },
+        { band: 11, gain: 0.1 },
+        { band: 12, gain: 0.2 },
+        { band: 13, gain: 0.25 },
+        { band: 14, gain: 0.3 },
     ],
     /** Makes the Music sound like Classic music / sound Classic music better */
     Classic: [
         { band: 0, gain: 0.375 },
-        { band: 1, gain: 0.350 },
+        { band: 1, gain: 0.35 },
         { band: 2, gain: 0.125 },
         { band: 3, gain: 0 },
         { band: 4, gain: 0 },
         { band: 5, gain: 0.125 },
-        { band: 6, gain: 0.550 },
-        { band: 7, gain: 0.050 },
+        { band: 6, gain: 0.55 },
+        { band: 7, gain: 0.05 },
         { band: 8, gain: 0.125 },
-        { band: 9, gain: 0.250 },
-        { band: 10, gain: 0.200 },
-        { band: 11, gain: 0.250 },
-        { band: 12, gain: 0.300 },
-        { band: 13, gain: 0.250 },
-        { band: 14, gain: 0.300 },
+        { band: 9, gain: 0.25 },
+        { band: 10, gain: 0.2 },
+        { band: 11, gain: 0.25 },
+        { band: 12, gain: 0.3 },
+        { band: 13, gain: 0.25 },
+        { band: 14, gain: 0.3 },
     ],
     /** Makes the Music sound like Pop music / sound Pop music better */
     Pop: [
@@ -845,7 +857,7 @@ exports.EQList = {
     /** Makes the Music sound like Electronic music / sound Electronic music better */
     Electronic: [
         { band: 0, gain: 0.375 },
-        { band: 1, gain: 0.350 },
+        { band: 1, gain: 0.35 },
         { band: 2, gain: 0.125 },
         { band: 3, gain: 0 },
         { band: 4, gain: 0 },
@@ -856,9 +868,9 @@ exports.EQList = {
         { band: 9, gain: 0.125 },
         { band: 10, gain: 0.15 },
         { band: 11, gain: 0.2 },
-        { band: 12, gain: 0.250 },
-        { band: 13, gain: 0.350 },
-        { band: 14, gain: 0.400 },
+        { band: 12, gain: 0.25 },
+        { band: 13, gain: 0.35 },
+        { band: 14, gain: 0.4 },
     ],
     /** Boosts all Bands slightly for louder and fuller sound */
     FullSound: [
@@ -880,20 +892,20 @@ exports.EQList = {
     ],
     /** Boosts basses + lower highs for a pro gaming sound */
     Gaming: [
-        { band: 0, gain: 0.350 },
-        { band: 1, gain: 0.300 },
-        { band: 2, gain: 0.250 },
-        { band: 3, gain: 0.200 },
-        { band: 4, gain: 0.150 },
-        { band: 5, gain: 0.100 },
-        { band: 6, gain: 0.050 },
+        { band: 0, gain: 0.35 },
+        { band: 1, gain: 0.3 },
+        { band: 2, gain: 0.25 },
+        { band: 3, gain: 0.2 },
+        { band: 4, gain: 0.15 },
+        { band: 5, gain: 0.1 },
+        { band: 6, gain: 0.05 },
         { band: 7, gain: -0.0 },
-        { band: 8, gain: -0.050 },
-        { band: 9, gain: -0.100 },
-        { band: 10, gain: -0.150 },
-        { band: 11, gain: -0.200 },
-        { band: 12, gain: -0.250 },
-        { band: 13, gain: -0.300 },
-        { band: 14, gain: -0.350 },
+        { band: 8, gain: -0.05 },
+        { band: 9, gain: -0.1 },
+        { band: 10, gain: -0.15 },
+        { band: 11, gain: -0.2 },
+        { band: 12, gain: -0.25 },
+        { band: 13, gain: -0.3 },
+        { band: 14, gain: -0.35 },
     ],
 };

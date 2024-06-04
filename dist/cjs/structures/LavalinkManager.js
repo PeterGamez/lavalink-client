@@ -27,7 +27,7 @@ class LavalinkManager extends events_1.EventEmitter {
             client: {
                 ...(options?.client || {}),
                 id: options?.client?.id,
-                username: options?.client?.username ?? "lavalink-client"
+                username: options?.client?.username ?? "lavalink-client",
             },
             sendToShard: options?.sendToShard,
             nodes: options?.nodes,
@@ -37,11 +37,11 @@ class LavalinkManager extends events_1.EventEmitter {
                 defaultSearchPlatform: options?.playerOptions?.defaultSearchPlatform ?? "ytsearch",
                 onDisconnect: {
                     destroyPlayer: options?.playerOptions?.onDisconnect?.destroyPlayer ?? true,
-                    autoReconnect: options?.playerOptions?.onDisconnect?.autoReconnect ?? false
+                    autoReconnect: options?.playerOptions?.onDisconnect?.autoReconnect ?? false,
                 },
                 onEmptyQueue: {
                     autoPlayFunction: options?.playerOptions?.onEmptyQueue?.autoPlayFunction ?? null,
-                    destroyAfterMs: options?.playerOptions?.onEmptyQueue?.destroyAfterMs ?? undefined
+                    destroyAfterMs: options?.playerOptions?.onEmptyQueue?.destroyAfterMs ?? undefined,
                 },
                 volumeDecrementer: options?.playerOptions?.volumeDecrementer ?? 1,
                 requesterTransformer: options?.playerOptions?.requesterTransformer ?? null,
@@ -63,9 +63,9 @@ class LavalinkManager extends events_1.EventEmitter {
                     playerDestroy: {
                         dontThrowError: options?.advancedOptions?.debugOptions?.playerDestroy?.dontThrowError ?? false,
                         debugLog: options?.advancedOptions?.debugOptions?.playerDestroy?.debugLog ?? false,
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
         return;
     }
@@ -84,20 +84,20 @@ class LavalinkManager extends events_1.EventEmitter {
             throw new SyntaxError("ManagerOption.autoSkipOnResolveError must be either false | true aka boolean");
         if (options?.emitNewSongsOnly && typeof options?.emitNewSongsOnly !== "boolean")
             throw new SyntaxError("ManagerOption.emitNewSongsOnly must be either false | true aka boolean");
-        if (!options?.nodes || !Array.isArray(options?.nodes) || !options?.nodes.every(node => this.utils.isNodeOptions(node)))
+        if (!options?.nodes || !Array.isArray(options?.nodes) || !options?.nodes.every((node) => this.utils.isNodeOptions(node)))
             throw new SyntaxError("ManagerOption.nodes must be an Array of NodeOptions and is required of at least 1 Node");
         /* QUEUE STORE */
         if (options?.queueOptions?.queueStore) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueStore));
             const requiredKeys = ["get", "set", "stringify", "parse", "delete"];
-            if (!requiredKeys.every(v => keys.includes(v)) || !requiredKeys.every(v => typeof options?.queueOptions?.queueStore[v] === "function"))
+            if (!requiredKeys.every((v) => keys.includes(v)) || !requiredKeys.every((v) => typeof options?.queueOptions?.queueStore[v] === "function"))
                 throw new SyntaxError(`The provided ManagerOption.QueueStore, does not have all required functions: ${requiredKeys.join(", ")}`);
         }
         /* QUEUE WATCHER */
         if (options?.queueOptions?.queueChangesWatcher) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueChangesWatcher));
             const requiredKeys = ["tracksAdd", "tracksRemoved", "shuffled"];
-            if (!requiredKeys.every(v => keys.includes(v)) || !requiredKeys.every(v => typeof options?.queueOptions?.queueChangesWatcher[v] === "function"))
+            if (!requiredKeys.every((v) => keys.includes(v)) || !requiredKeys.every((v) => typeof options?.queueOptions?.queueChangesWatcher[v] === "function"))
                 throw new SyntaxError(`The provided ManagerOption.DefaultQueueChangesWatcher, does not have all required functions: ${requiredKeys.join(", ")}`);
         }
         if (typeof options?.queueOptions?.maxPreviousTracks !== "number" || options?.queueOptions?.maxPreviousTracks < 0)
@@ -248,7 +248,7 @@ class LavalinkManager extends events_1.EventEmitter {
         const oldPlayer = this.getPlayer(guildId);
         if (!oldPlayer)
             return;
-        // oldPlayer.connected is operational. you could also do oldPlayer.voice?.token 
+        // oldPlayer.connected is operational. you could also do oldPlayer.voice?.token
         if (oldPlayer.voiceChannelId === "string" && oldPlayer.connected && !oldPlayer.get("internal_destroywithoutdisconnect")) {
             if (!this.options?.advancedOptions?.debugOptions?.playerDestroy?.dontThrowError)
                 throw new Error(`Use Player#destroy() not LavalinkManager#deletePlayer() to stop the Player ${JSON.stringify(oldPlayer.toJSON?.())}`);
@@ -261,7 +261,7 @@ class LavalinkManager extends events_1.EventEmitter {
      * Checks wether the the lib is useable based on if any node is connected
      */
     get useable() {
-        return this.nodeManager.nodes.filter(v => v.connected).size > 0;
+        return this.nodeManager.nodes.filter((v) => v.connected).size > 0;
     }
     /**
      * Initiates the Manager, creates all nodes and connects all of them
@@ -374,11 +374,11 @@ class LavalinkManager extends events_1.EventEmitter {
                             token: update.token,
                             endpoint: update.endpoint,
                             sessionId: player.voice?.sessionId,
-                        }
-                    }
+                        },
+                    },
                 });
                 if (this.options?.advancedOptions?.debugOptions?.noAudio === true)
-                    console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, Sent updatePlayer for voice token session", { voice: { token: update.token, endpoint: update.endpoint, sessionId: player.voice?.sessionId, } });
+                    console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, Sent updatePlayer for voice token session", { voice: { token: update.token, endpoint: update.endpoint, sessionId: player.voice?.sessionId } });
                 return;
             }
             /* voice state update */
@@ -395,7 +395,7 @@ class LavalinkManager extends events_1.EventEmitter {
             }
             else {
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
-                    return void await player.destroy(Player_1.DestroyReasons.Disconnected);
+                    return void (await player.destroy(Player_1.DestroyReasons.Disconnected));
                 }
                 this.emit("playerDisconnect", player, player.voiceChannelId);
                 if (!player.paused)
@@ -405,9 +405,9 @@ class LavalinkManager extends events_1.EventEmitter {
                         await player.connect();
                     }
                     catch {
-                        return void await player.destroy(Player_1.DestroyReasons.PlayerReconnectFail);
+                        return void (await player.destroy(Player_1.DestroyReasons.PlayerReconnectFail));
                     }
-                    return void player.paused && await player.resume();
+                    return void player.paused && (await player.resume());
                 }
                 player.voiceChannelId = null;
                 player.voice = Object.assign({});

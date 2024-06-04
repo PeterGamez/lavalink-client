@@ -53,8 +53,8 @@ export class Queue {
         this.QueueSaver = QueueSaver;
         this.options.maxPreviousTracks = this.QueueSaver?.options?.maxPreviousTracks ?? this.options.maxPreviousTracks;
         this.current = this.managerUtils.isTrack(data.current) ? data.current : null;
-        this.previous = Array.isArray(data.previous) && data.previous.some(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) ? data.previous.filter(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) : [];
-        this.tracks = Array.isArray(data.tracks) && data.tracks.some(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) ? data.tracks.filter(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) : [];
+        this.previous = Array.isArray(data.previous) && data.previous.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) ? data.previous.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) : [];
+        this.tracks = Array.isArray(data.tracks) && data.tracks.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) ? data.tracks.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)) : [];
         Object.defineProperty(this, QueueSymbol, { configurable: true, value: true });
     }
     /**
@@ -77,12 +77,12 @@ export class Queue {
             const data = await this.QueueSaver.get(this.guildId);
             if (!data)
                 return console.log("No data found to sync for guildId: ", this.guildId);
-            if (!dontSyncCurrent && !this.current && (this.managerUtils.isTrack(data.current)))
+            if (!dontSyncCurrent && !this.current && this.managerUtils.isTrack(data.current))
                 this.current = data.current;
-            if (Array.isArray(data.tracks) && data?.tracks.length && data.tracks.some(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)))
-                this.tracks.splice(override ? 0 : this.tracks.length, override ? this.tracks.length : 0, ...data.tracks.filter(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
-            if (Array.isArray(data.previous) && data?.previous.length && data.previous.some(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)))
-                this.previous.splice(0, override ? this.tracks.length : 0, ...data.previous.filter(track => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
+            if (Array.isArray(data.tracks) && data?.tracks.length && data.tracks.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)))
+                this.tracks.splice(override ? 0 : this.tracks.length, override ? this.tracks.length : 0, ...data.tracks.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
+            if (Array.isArray(data.previous) && data?.previous.length && data.previous.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)))
+                this.previous.splice(0, override ? this.tracks.length : 0, ...data.previous.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
             await this.utils.save();
             return;
         },
@@ -107,7 +107,7 @@ export class Queue {
          */
         totalDuration: () => {
             return this.tracks.reduce((acc, cur) => acc + (cur.info.duration || 0), this.current?.info.duration || 0);
-        }
+        },
     };
     /**
      * Shuffles the current Queue, then saves it
@@ -121,7 +121,8 @@ export class Queue {
         if (this.tracks.length == 2) {
             [this.tracks[0], this.tracks[1]] = [this.tracks[1], this.tracks[0]];
         }
-        else { // randomly swap places.
+        else {
+            // randomly swap places.
             for (let i = this.tracks.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
@@ -141,16 +142,18 @@ export class Queue {
      */
     async add(TrackOrTracks, index) {
         if (typeof index === "number" && index >= 0 && index < this.tracks.length)
-            return await this.splice(index, 0, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter(v => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)));
+            return await this.splice(index, 0, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)));
         const oldStored = typeof this.queueChanges?.tracksAdd === "function" ? this.utils.toJSON() : null;
         // add the track(s)
-        this.tracks.push(...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter(v => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)));
+        this.tracks.push(...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)));
         // log if available
         if (typeof this.queueChanges?.tracksAdd === "function")
             try {
-                this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter(v => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), this.tracks.length, oldStored, this.utils.toJSON());
+                this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), this.tracks.length, oldStored, this.utils.toJSON());
             }
-            catch (e) { /*  */ }
+            catch (e) {
+                /*  */
+            }
         // save the queue
         await this.utils.save();
         // return the amount of the tracks
@@ -172,21 +175,25 @@ export class Queue {
             return null;
         }
         // Log if available
-        if ((TrackOrTracks) && typeof this.queueChanges?.tracksAdd === "function")
+        if (TrackOrTracks && typeof this.queueChanges?.tracksAdd === "function")
             try {
-                this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter(v => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), index, oldStored, this.utils.toJSON());
+                this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), index, oldStored, this.utils.toJSON());
             }
-            catch (e) { /*  */ }
+            catch (e) {
+                /*  */
+            }
         // remove the tracks (and add the new ones)
-        let spliced = TrackOrTracks ? this.tracks.splice(index, amount, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter(v => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v))) : this.tracks.splice(index, amount);
+        let spliced = TrackOrTracks ? this.tracks.splice(index, amount, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v))) : this.tracks.splice(index, amount);
         // get the spliced array
-        spliced = (Array.isArray(spliced) ? spliced : [spliced]);
+        spliced = Array.isArray(spliced) ? spliced : [spliced];
         // Log if available
         if (typeof this.queueChanges?.tracksRemoved === "function")
             try {
                 this.queueChanges.tracksRemoved(this.guildId, spliced, index, oldStored, this.utils.toJSON());
             }
-            catch (e) { /* */ }
+            catch (e) {
+                /* */
+            }
         // save the queue
         await this.utils.save();
         // return the things

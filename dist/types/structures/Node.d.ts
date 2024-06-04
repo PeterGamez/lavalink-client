@@ -202,6 +202,11 @@ export declare class LavalinkNode {
      * @returns
      */
     destroy(destroyReason?: DestroyReasonsType, deleteNode?: boolean): void;
+    /**
+     * Disconnects the Node-Connection (Websocket)
+     * @returns
+     */
+    disconnect(destroyReason?: DestroyReasonsType, deleteNode?: boolean): void;
     /** Returns if connected to the Node. */
     get connected(): boolean;
     /**

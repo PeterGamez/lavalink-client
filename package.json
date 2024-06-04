@@ -11,8 +11,6 @@
     "build:esm": "node tools/cleanup esm && tsc -p config/tsconfig.esm.json",
     "build:types": "node tools/cleanup types && tsc -p config/tsconfig.types.json",
     "clean": "node tools/cleanup",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix 'src/**/*.{ts}'",
     "format": "prettier --write src/**/*.ts --config ./.prettierrc.js",
     "test": "node -v",
     "docs": "npx typedoc"
@@ -50,9 +48,6 @@
   "devDependencies": {
     "@types/node": "^20.4.8",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "@typescript-eslint/parser": "^6.4.0",
-    "eslint": "^8.47.0",
     "ts-loader": "^9.4.4",
     "typedoc": "^0.25.4",
     "typedoc-theme-hierarchy": "^4.1.2",

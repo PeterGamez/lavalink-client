@@ -8,7 +8,7 @@ export class NodeManager extends EventEmitter {
         super();
         this.LavalinkManager = LavalinkManager;
         if (this.LavalinkManager.options.nodes)
-            this.LavalinkManager.options.nodes.forEach(node => this.createNode(node));
+            this.LavalinkManager.options.nodes.forEach((node) => this.createNode(node));
     }
     /**
      * Disconnects all Nodes from lavalink ws sockets
@@ -18,7 +18,7 @@ export class NodeManager extends EventEmitter {
     async disconnectAll(deleteAllNodes = false) {
         if (!this.nodes.size)
             throw new Error("There are no nodes to disconnect (no nodes in the nodemanager)");
-        if (!this.nodes.filter(v => v.connected).size)
+        if (!this.nodes.filter((v) => v.connected).size)
             throw new Error("There are no nodes to disconnect (all nodes disconnected)");
         let counter = 0;
         for (const node of [...this.nodes.values()]) {
@@ -36,7 +36,7 @@ export class NodeManager extends EventEmitter {
     async connectAll() {
         if (!this.nodes.size)
             throw new Error("There are no nodes to connect (no nodes in the nodemanager)");
-        if (!this.nodes.filter(v => !v.connected).size)
+        if (!this.nodes.filter((v) => !v.connected).size)
             throw new Error("There are no nodes to connect (all nodes connected)");
         let counter = 0;
         for (const node of [...this.nodes.values()]) {
@@ -74,51 +74,37 @@ export class NodeManager extends EventEmitter {
         switch (sortType) {
             case "memory":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)); // sort after memor
                 }
                 break;
             case "cpuLavalink":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0)); // sort after memor
                 }
                 break;
             case "cpuSystem":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0)); // sort after memor
                 }
                 break;
             case "calls":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => a.calls - b.calls); // client sided sorting
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => a.calls - b.calls); // client sided sorting
                 }
                 break;
             case "playingPlayers":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.playingPlayers || 0) - (b.stats?.playingPlayers || 0));
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.playingPlayers || 0) - (b.stats?.playingPlayers || 0));
                 }
                 break;
             case "players":
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
                 }
                 break;
             default:
                 {
-                    return [...this.nodes.values()]
-                        .filter((node) => node.connected)
-                        .sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
                 }
                 break;
         }

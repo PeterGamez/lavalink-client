@@ -6,13 +6,7 @@ import WebSocket from "ws";
 import { NodeManager } from "./NodeManager";
 import { DestroyReasons, DestroyReasonsType, Player } from "./Player";
 import { LavalinkTrack, PluginInfo, Track } from "./Track";
-import {
-	Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaSearchQuery, LavaSearchResponse,
-	LoadTypes, NodeSymbol, PlayerEvents, PlayerEventType, PlayerUpdateInfo, queueTrackEnd,
-	RoutePlanner, SearchQuery, SearchResult, Session, SponsorBlockChaptersLoaded,
-	SponsorBlockChapterStarted, SponsorBlockSegmentSkipped, SponsorBlockSegmentsLoaded,
-	TrackEndEvent, TrackExceptionEvent, TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent
-} from "./Utils";
+import { Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaSearchQuery, LavaSearchResponse, LoadTypes, NodeSymbol, PlayerEvents, PlayerEventType, PlayerUpdateInfo, queueTrackEnd, RoutePlanner, SearchQuery, SearchResult, Session, SponsorBlockChaptersLoaded, SponsorBlockChapterStarted, SponsorBlockSegmentSkipped, SponsorBlockSegmentsLoaded, TrackEndEvent, TrackExceptionEvent, TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent } from "./Utils";
 
 /** Modifies any outgoing REST requests. */
 export type ModifyRequest = (options: Dispatcher.RequestOptions) => void;
@@ -154,7 +148,7 @@ export class LavalinkNode {
         cpu: {
             cores: 0,
             lavalinkLoad: 0,
-            systemLoad: 0
+            systemLoad: 0,
         },
         memory: {
             allocated: 0,
@@ -167,11 +161,11 @@ export class LavalinkNode {
             deficit: 0,
             nulled: 0,
             sent: 0,
-        }
+        },
     };
     public sessionId?: string | null = null;
     /** Wether the node resuming is enabled or not */
-    public resuming: { enabled: boolean, timeout: number|null } = { enabled: true, timeout: null };
+    public resuming: { enabled: boolean; timeout: number | null } = { enabled: true, timeout: null };
     /** Actual Lavalink Information of the Node */
     public info: LavalinkInfo | null = null;
     /** The Node Manager of this Node */
@@ -183,13 +177,13 @@ export class LavalinkNode {
     /** The Socket of the Lavalink */
     private socket: WebSocket | null = null;
     /** The Rest Server for this Lavalink */
-    private rest: Pool
+    private rest: Pool;
     /** Version of what the Lavalink Server should be */
     private version = "v4";
 
     /**
      * Create a new Node
-     * @param options Lavalink Node Options 
+     * @param options Lavalink Node Options
      * @param manager Node Manager
      */
     constructor(options: LavalinkNodeOptions, manager: NodeManager) {
@@ -198,7 +192,7 @@ export class LavalinkNode {
             retryAmount: 5,
             retryDelay: 30e3,
             requestTimeout: 10e3,
-            ...options
+            ...options,
         };
 
         this.NodeManager = manager;
@@ -208,7 +202,7 @@ export class LavalinkNode {
         if (this.options.secure && this.options.port !== 443) throw new SyntaxError("If secure is true, then the port must be 443");
 
         this.rest = new Pool(this.poolAddress, this.options.poolOptions);
-        this.options.regions = (this.options.regions || []).map(a => a.toLowerCase());
+        this.options.regions = (this.options.regions || []).map((a) => a.toLowerCase());
 
         Object.defineProperty(this, NodeSymbol, { configurable: true, value: true });
     }
@@ -217,17 +211,17 @@ export class LavalinkNode {
      * Raw Request util function
      * @param endpoint endpoint string
      * @param modify modify the request
-     * @returns 
+     * @returns
      */
     private async rawRequest(endpoint: string, modify?: ModifyRequest) {
         const options: Dispatcher.RequestOptions = {
             path: `/${this.version}/${endpoint.replace(/^\//gm, "")}`,
             method: "GET",
             headers: {
-                Authorization: this.options.authorization
+                Authorization: this.options.authorization,
             },
             headersTimeout: this.options.requestTimeout,
-        }
+        };
 
         modify?.(options);
 
@@ -250,7 +244,7 @@ export class LavalinkNode {
 
         if (["DELETE", "PUT"].includes(options.method)) return;
 
-        if(request.statusCode === 404) throw new Error(`Node Request resulted into an error, request-PATH: ${options.path} | headers: ${JSON.stringify(request.headers)}`)
+        if (request.statusCode === 404) throw new Error(`Node Request resulted into an error, request-PATH: ${options.path} | headers: ${JSON.stringify(request.headers)}`);
 
         return parseAsText ? await request.body.text() : await request.body.json();
     }
@@ -265,71 +259,76 @@ export class LavalinkNode {
         const Query = this.NodeManager.LavalinkManager.utils.transformQuery(query);
 
         this.NodeManager.LavalinkManager.utils.validateQueryString(this, Query.query, Query.source);
-        if(Query.source) this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
+        if (Query.source) this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
 
-        if(["bcsearch", "bandcamp"].includes(Query.source)) {
+        if (["bcsearch", "bandcamp"].includes(Query.source)) {
             throw new Error("Bandcamp Search only works on the player!");
         }
 
         let uri = `/loadtracks?identifier=`;
-        if(/^https?:\/\//.test(Query.query) || ["http", "https", "link", "uri"].includes(Query.source)) { // if it's a link simply encode it
+        if (/^https?:\/\//.test(Query.query) || ["http", "https", "link", "uri"].includes(Query.source)) {
+            // if it's a link simply encode it
             uri += encodeURIComponent(decodeURIComponent(Query.query));
-        } else { // if not make a query out of it
-            if(Query.source !== "local") uri += `${Query.source}:`; // only add the query source string if it's not a local track
-            if(Query.source === "ftts") uri += `//${encodeURIComponent(encodeURI(decodeURIComponent(Query.query)))}`;
+        } else {
+            // if not make a query out of it
+            if (Query.source !== "local") uri += `${Query.source}:`; // only add the query source string if it's not a local track
+            if (Query.source === "ftts") uri += `//${encodeURIComponent(encodeURI(decodeURIComponent(Query.query)))}`;
             else uri += encodeURIComponent(decodeURIComponent(Query.query));
         }
-        const res = await this.request(uri) as {
-            loadType: LoadTypes,
-            data: any,
-            pluginInfo: PluginInfo,
+        const res = (await this.request(uri)) as {
+            loadType: LoadTypes;
+            data: any;
+            pluginInfo: PluginInfo;
         };
 
         // transform the data which can be Error, Track or Track[] to enfore [Track]
-        const resTracks = res.loadType === "playlist" ? res.data?.tracks : res.loadType === "track" ? [res.data] : res.loadType === "search" ? Array.isArray(res.data) ? res.data : [res.data] : [];
+        const resTracks = res.loadType === "playlist" ? res.data?.tracks : res.loadType === "track" ? [res.data] : res.loadType === "search" ? (Array.isArray(res.data) ? res.data : [res.data]) : [];
 
         return {
             loadType: res.loadType,
             exception: res.loadType === "error" ? res.data : null,
             pluginInfo: res.pluginInfo || {},
-            playlist: res.loadType === "playlist" ? {
-                name: res.data.info?.name || res.data.pluginInfo?.name || null,
-                title: res.data.info?.name || res.data.pluginInfo?.name || null,
-                author: res.data.info?.author || res.data.pluginInfo?.author || null,
-                thumbnail: (res.data.info?.artworkUrl) || (res.data.pluginInfo?.artworkUrl) || ((typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1) ? null : resTracks[res.data?.info?.selectedTrack] ? (resTracks[res.data?.info?.selectedTrack]?.info?.artworkUrl || resTracks[res.data?.info?.selectedTrack]?.info?.pluginInfo?.artworkUrl) : null) || null,
-                uri: res.data.info?.url || res.data.info?.uri || res.data.info?.link || res.data.pluginInfo?.url || res.data.pluginInfo?.uri || res.data.pluginInfo?.link || null,
-                selectedTrack: typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? this.NodeManager.LavalinkManager.utils.buildTrack(resTracks[res.data?.info?.selectedTrack], requestUser) : null,
-                duration: resTracks.length ? resTracks.reduce((acc, cur) => acc + (cur?.info?.length || 0), 0) : 0,
-            } : null,
-            tracks: (resTracks.length ? resTracks.map(t => this.NodeManager.LavalinkManager.utils.buildTrack(t, requestUser)) : []) as Track[]
+            playlist:
+                res.loadType === "playlist"
+                    ? {
+                          name: res.data.info?.name || res.data.pluginInfo?.name || null,
+                          title: res.data.info?.name || res.data.pluginInfo?.name || null,
+                          author: res.data.info?.author || res.data.pluginInfo?.author || null,
+                          thumbnail: res.data.info?.artworkUrl || res.data.pluginInfo?.artworkUrl || (typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? resTracks[res.data?.info?.selectedTrack]?.info?.artworkUrl || resTracks[res.data?.info?.selectedTrack]?.info?.pluginInfo?.artworkUrl : null) || null,
+                          uri: res.data.info?.url || res.data.info?.uri || res.data.info?.link || res.data.pluginInfo?.url || res.data.pluginInfo?.uri || res.data.pluginInfo?.link || null,
+                          selectedTrack: typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? this.NodeManager.LavalinkManager.utils.buildTrack(resTracks[res.data?.info?.selectedTrack], requestUser) : null,
+                          duration: resTracks.length ? resTracks.reduce((acc, cur) => acc + (cur?.info?.length || 0), 0) : 0,
+                      }
+                    : null,
+            tracks: (resTracks.length ? resTracks.map((t) => this.NodeManager.LavalinkManager.utils.buildTrack(t, requestUser)) : []) as Track[],
         } as SearchResult;
     }
 
-    async lavaSearch(query:LavaSearchQuery, requestUser: unknown, throwOnEmpty:boolean = false) {
+    async lavaSearch(query: LavaSearchQuery, requestUser: unknown, throwOnEmpty: boolean = false) {
         const Query = this.NodeManager.LavalinkManager.utils.transformLavaSearchQuery(query);
 
-        if(Query.source) this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
-        if(/^https?:\/\//.test(Query.query)) return await this.search({ query: Query.query, source: Query.source }, requestUser);
+        if (Query.source) this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
+        if (/^https?:\/\//.test(Query.query)) return await this.search({ query: Query.query, source: Query.source }, requestUser);
 
-        if(!["spsearch", "sprec", "amsearch", "dzsearch", "dzisrc", "ytmsearch", "ytsearch"].includes(Query.source)) throw new SyntaxError(`Query.source must be a source from LavaSrc: "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "ytmsearch" | "ytsearch"`)
+        if (!["spsearch", "sprec", "amsearch", "dzsearch", "dzisrc", "ytmsearch", "ytsearch"].includes(Query.source)) throw new SyntaxError(`Query.source must be a source from LavaSrc: "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "ytmsearch" | "ytsearch"`);
 
-        if(!this.info.plugins.find(v => v.name === "lavasearch-plugin")) throw new RangeError(`there is no lavasearch-plugin available in the lavalink node: ${this.id}`);
-        if(!this.info.plugins.find(v => v.name === "lavasrc-plugin")) throw new RangeError(`there is no lavasrc-plugin available in the lavalink node: ${this.id}`);
+        if (!this.info.plugins.find((v) => v.name === "lavasearch-plugin")) throw new RangeError(`there is no lavasearch-plugin available in the lavalink node: ${this.id}`);
+        if (!this.info.plugins.find((v) => v.name === "lavasrc-plugin")) throw new RangeError(`there is no lavasrc-plugin available in the lavalink node: ${this.id}`);
 
-        const { request } = await this.rawRequest(`/loadsearch?query=${Query.source ? `${Query.source}:` : ""}${encodeURIComponent(Query.query)}${Query.types?.length ? `&types=${Query.types.join(",")}`: ""}`);
+        const { request } = await this.rawRequest(`/loadsearch?query=${Query.source ? `${Query.source}:` : ""}${encodeURIComponent(Query.query)}${Query.types?.length ? `&types=${Query.types.join(",")}` : ""}`);
 
-        if(throwOnEmpty === true) throw new Error("Nothing found");
+        if (throwOnEmpty === true) throw new Error("Nothing found");
 
-        const res = (request.statusCode === 204 ? { } : await request.body.json()) as LavaSearchResponse;
+        const res = (request.statusCode === 204 ? {} : await request.body.json()) as LavaSearchResponse;
 
         return {
-            tracks: res.tracks?.map(v => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) || [],
-            albums: res.albums?.map(v => ({info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map(v => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
-            artists: res.artists?.map(v => ({info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map(v => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
-            playlists: res.playlists?.map(v => ({info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map(v => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
-            texts: res.texts?.map(v => ({text: v.text, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo })) || [],
-            pluginInfo: res.pluginInfo || (res as unknown as { plugin: unknown })?.plugin
-        } as LavaSearchResponse
+            tracks: res.tracks?.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) || [],
+            albums: res.albums?.map((v) => ({ info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
+            artists: res.artists?.map((v) => ({ info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
+            playlists: res.playlists?.map((v) => ({ info: v.info, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo, tracks: v.tracks.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
+            texts: res.texts?.map((v) => ({ text: v.text, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo })) || [],
+            pluginInfo: res.pluginInfo || (res as unknown as { plugin: unknown })?.plugin,
+        } as LavaSearchResponse;
     }
 
     /**
@@ -340,7 +339,7 @@ export class LavalinkNode {
     public async updatePlayer(data: PlayerUpdateInfo) {
         if (!this.sessionId) throw new Error("The Lavalink Node is either not ready, or not up to date!");
         this.syncPlayerData(data);
-        const res = await this.request(`/sessions/${this.sessionId}/players/${data.guildId}`, r => {
+        const res = (await this.request(`/sessions/${this.sessionId}/players/${data.guildId}`, (r) => {
             r.method = "PATCH";
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             r.headers!["Content-Type"] = "application/json";
@@ -349,10 +348,10 @@ export class LavalinkNode {
 
             if (data.noReplace) {
                 const url = new URL(`${this.poolAddress}${r.path}`);
-                url.searchParams.append("noReplace", data.noReplace === true && typeof data.noReplace === "boolean" ? "true" : "false")
+                url.searchParams.append("noReplace", data.noReplace === true && typeof data.noReplace === "boolean" ? "true" : "false");
                 r.path = url.pathname + url.search;
             }
-        }) as LavalinkPlayer;
+        })) as LavalinkPlayer;
 
         return this.syncPlayerData({}, res), res;
     }
@@ -365,7 +364,9 @@ export class LavalinkNode {
     public async destroyPlayer(guildId) {
         if (!this.sessionId) throw new Error("The Lavalink-Node is either not ready, or not up to date!");
 
-        return await this.request(`/sessions/${this.sessionId}/players/${guildId}`, r => { r.method = "DELETE"; });
+        return await this.request(`/sessions/${this.sessionId}/players/${guildId}`, (r) => {
+            r.method = "DELETE";
+        });
     }
 
     /**
@@ -373,16 +374,16 @@ export class LavalinkNode {
      * @param sessionId Provide the Session Id of the previous connection, to resume the node and it's player(s)
      * @returns
      */
-    public connect(sessionId?:string): void {
+    public connect(sessionId?: string): void {
         if (this.connected) return;
 
         const headers = {
             Authorization: this.options.authorization,
             "User-Id": this.NodeManager.LavalinkManager.options.client.id,
             "Client-Name": this.NodeManager.LavalinkManager.options.client.username || "Lavalink-Client",
-        }
+        };
 
-        if(typeof this.options.sessionId === "string" || typeof sessionId === "string") {
+        if (typeof this.options.sessionId === "string" || typeof sessionId === "string") {
             headers["Session-Id"] = this.options.sessionId || sessionId;
             this.sessionId = this.options.sessionId || sessionId;
         }
@@ -403,10 +404,10 @@ export class LavalinkNode {
      * Destroys the Node-Connection (Websocket) and all player's of the node
      * @returns
      */
-    public destroy(destroyReason?:DestroyReasonsType, deleteNode = true) {
-        if (!this.connected) return
-        const players = this.NodeManager.LavalinkManager.players.filter(p => p.node.id == this.id);
-        if (players) players.forEach(p => p.destroy(destroyReason || DestroyReasons.NodeDestroy));
+    public destroy(destroyReason?: DestroyReasonsType, deleteNode = true) {
+        if (!this.connected) return;
+        const players = this.NodeManager.LavalinkManager.players.filter((p) => p.node.id == this.id);
+        if (players) players.forEach((p) => p.destroy(destroyReason || DestroyReasons.NodeDestroy));
 
         this.socket.close(1000, "Node-Destroy");
         this.socket.removeAllListeners();
@@ -415,7 +416,31 @@ export class LavalinkNode {
         this.reconnectAttempts = 1;
         clearTimeout(this.reconnectTimeout);
 
-        if(deleteNode) {
+        if (deleteNode) {
+            this.NodeManager.emit("destroy", this, destroyReason);
+            this.NodeManager.nodes.delete(this.id);
+        } else {
+            this.NodeManager.emit("disconnect", this, { code: 1000, reason: destroyReason });
+        }
+        return;
+    }
+
+    /**
+     * Disconnects the Node-Connection (Websocket)
+     * @returns
+     */
+    public disconnect(destroyReason?: DestroyReasonsType, deleteNode = true) {
+        if (!this.connected) return;
+
+        this.socket.terminate();
+
+        this.socket.removeAllListeners();
+        this.socket = null;
+
+        this.reconnectAttempts = 1;
+        clearTimeout(this.reconnectTimeout);
+
+        if (deleteNode) {
             this.NodeManager.emit("destroy", this, destroyReason);
             this.NodeManager.nodes.delete(this.id);
         } else {
@@ -435,7 +460,7 @@ export class LavalinkNode {
      */
     public async fetchAllPlayers() {
         if (!this.sessionId) throw new Error("The Lavalink-Node is either not ready, or not up to date!");
-        const players = await this.request(`/sessions/${this.sessionId}/players`) as LavalinkPlayer[] | InvalidLavalinkRestRequest | null;
+        const players = (await this.request(`/sessions/${this.sessionId}/players`)) as LavalinkPlayer[] | InvalidLavalinkRestRequest | null;
         if (!Array.isArray(players)) return [];
         else return players;
     }
@@ -445,7 +470,7 @@ export class LavalinkNode {
      */
     public async fetchPlayer(guildId: string) {
         if (!this.sessionId) throw new Error("The Lavalink-Node is either not ready, or not up to date!");
-        return await this.request(`/sessions/${this.sessionId}/players/${guildId}`) as LavalinkPlayer | InvalidLavalinkRestRequest | null;
+        return (await this.request(`/sessions/${this.sessionId}/players/${guildId}`)) as LavalinkPlayer | InvalidLavalinkRestRequest | null;
     }
 
     /**
@@ -456,19 +481,18 @@ export class LavalinkNode {
     public async updateSession(resuming?: boolean, timeout?: number) {
         if (!this.sessionId) throw new Error("the Lavalink-Node is either not ready, or not up to date!");
         const data = {} as Session;
-        if(typeof resuming === "boolean") data.resuming = resuming;
-        if(typeof timeout === "number" && timeout > 0) data.timeout = timeout;
+        if (typeof resuming === "boolean") data.resuming = resuming;
+        if (typeof timeout === "number" && timeout > 0) data.timeout = timeout;
         this.resuming = {
             enabled: typeof resuming === "boolean" ? resuming : false,
             timeout: typeof resuming === "boolean" && resuming === true ? timeout : null,
         };
-        return await this.request(`/sessions/${this.sessionId}`, r => {
+        return (await this.request(`/sessions/${this.sessionId}`, (r) => {
             r.method = "PATCH";
-            r.headers = { Authorization: this.options.authorization, 'Content-Type': 'application/json' }
+            r.headers = { Authorization: this.options.authorization, "Content-Type": "application/json" };
             r.body = JSON.stringify(data);
-        }) as Session | InvalidLavalinkRestRequest | null;
+        })) as Session | InvalidLavalinkRestRequest | null;
     }
-
 
     /**
      * Decode Track or Tracks
@@ -479,10 +503,10 @@ export class LavalinkNode {
          * @param encoded
          * @returns
          */
-        singleTrack: async (encoded: Base64, requester:unknown) => {
-            if(!encoded) throw new SyntaxError("No encoded (Base64 string) was provided");
+        singleTrack: async (encoded: Base64, requester: unknown) => {
+            if (!encoded) throw new SyntaxError("No encoded (Base64 string) was provided");
             // return the decoded + builded track
-            return this.NodeManager.LavalinkManager.utils.buildTrack(await this.request(`/decodetrack?encodedTrack=${encoded}`) as LavalinkTrack, requester);
+            return this.NodeManager.LavalinkManager.utils.buildTrack((await this.request(`/decodetrack?encodedTrack=${encoded}`)) as LavalinkTrack, requester);
         },
 
         /**
@@ -490,24 +514,24 @@ export class LavalinkNode {
          * @param encodeds Decodes multiple tracks into their info
          * @returns
          */
-        multipleTracks: async (encodeds: Base64[], requester:unknown) => {
-            if(!Array.isArray(encodeds) || !encodeds.every(v => typeof v === "string" && v.length > 1)) throw new SyntaxError("You need to provide encodeds, which is an array of base64 strings")
+        multipleTracks: async (encodeds: Base64[], requester: unknown) => {
+            if (!Array.isArray(encodeds) || !encodeds.every((v) => typeof v === "string" && v.length > 1)) throw new SyntaxError("You need to provide encodeds, which is an array of base64 strings");
             // return the decoded + builded tracks
-            return await this.request(`/decodetracks`, r => {
+            return await this.request(`/decodetracks`, (r) => {
                 r.method = "POST";
                 r.body = JSON.stringify(encodeds);
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 r.headers!["Content-Type"] = "application/json";
-            }).then((r:LavalinkTrack[]) => r.map(track => this.NodeManager.LavalinkManager.utils.buildTrack(track, requester)));
-        }
-    }
+            }).then((r: LavalinkTrack[]) => r.map((track) => this.NodeManager.LavalinkManager.utils.buildTrack(track, requester)));
+        },
+    };
 
     /**
      * Request Lavalink statistics.
      * @returns
      */
     public async fetchStats() {
-        return await this.request(`/stats`) as BaseNodeStats;
+        return (await this.request(`/stats`)) as BaseNodeStats;
     }
 
     /**
@@ -516,7 +540,13 @@ export class LavalinkNode {
      */
     public async fetchVersion() {
         // need to adjust path for no-prefix version info
-        return await this.request(`/version`, r => { r.path = "/version"; }, true) as string;
+        return (await this.request(
+            `/version`,
+            (r) => {
+                r.path = "/version";
+            },
+            true
+        )) as string;
     }
 
     /**
@@ -524,7 +554,7 @@ export class LavalinkNode {
      * @returns
      */
     public async fetchInfo() {
-        return await this.request(`/info`) as LavalinkInfo;
+        return (await this.request(`/info`)) as LavalinkInfo;
     }
 
     /**
@@ -536,7 +566,7 @@ export class LavalinkNode {
          */
         getStatus: async () => {
             if (!this.sessionId) throw new Error("the Lavalink-Node is either not ready, or not up to date!");
-            return await this.request(`/routeplanner/status`) as RoutePlanner;
+            return (await this.request(`/routeplanner/status`)) as RoutePlanner;
         },
 
         /**
@@ -545,7 +575,7 @@ export class LavalinkNode {
          */
         unmarkFailedAddress: async (address: string) => {
             if (!this.sessionId) throw new Error("the Lavalink-Node is either not ready, or not up to date!");
-            await this.request(`/routeplanner/free/address`, r => {
+            await this.request(`/routeplanner/free/address`, (r) => {
                 r.method = "POST";
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 r.headers!["Content-Type"] = "application/json";
@@ -558,24 +588,19 @@ export class LavalinkNode {
          */
         unmarkAllFailedAddresses: async () => {
             if (!this.sessionId) throw new Error("the Lavalink-Node is either not ready, or not up to date!");
-            return await this.request(`/routeplanner/free/all`, r => {
+            return await this.request(`/routeplanner/free/all`, (r) => {
                 r.method = "POST";
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 r.headers!["Content-Type"] = "application/json";
             });
-        }
-    }
-
-
-
-
+        },
+    };
 
     /** Private Utils */
     private validate() {
         if (!this.options.authorization) throw new SyntaxError("LavalinkNode requires 'authorization'");
         if (!this.options.host) throw new SyntaxError("LavalinkNode requires 'host'");
         if (!this.options.port) throw new SyntaxError("LavalinkNode requires 'port'");
-
     }
 
     private syncPlayerData(data: Partial<PlayerUpdateInfo>, res?: LavalinkPlayer) {
@@ -633,15 +658,14 @@ export class LavalinkNode {
         return true;
     }
 
-
     private get poolAddress() {
         return `http${this.options.secure ? "s" : ""}://${this.options.host}:${this.options.port}`;
     }
 
     private reconnect(instaReconnect = false): void {
-        if(instaReconnect) {
+        if (instaReconnect) {
             if (this.reconnectAttempts >= this.options.retryAmount) {
-                const error = new Error(`Unable to connect after ${this.options.retryAmount} attempts.`)
+                const error = new Error(`Unable to connect after ${this.options.retryAmount} attempts.`);
 
                 this.NodeManager.emit("error", this, error);
                 return this.destroy(DestroyReasons.NodeReconnectFail);
@@ -655,7 +679,7 @@ export class LavalinkNode {
         }
         this.reconnectTimeout = setTimeout(() => {
             if (this.reconnectAttempts >= this.options.retryAmount) {
-                const error = new Error(`Unable to connect after ${this.options.retryAmount} attempts.`)
+                const error = new Error(`Unable to connect after ${this.options.retryAmount} attempts.`);
                 this.NodeManager.emit("error", this, error);
                 return this.destroy(DestroyReasons.NodeReconnectFail);
             }
@@ -672,7 +696,7 @@ export class LavalinkNode {
         // reset the reconnect attempts amount
         this.reconnectAttempts = 1;
 
-        this.info = await this.fetchInfo().catch(() => null)
+        this.info = await this.fetchInfo().catch(() => null);
         if (!this.info && ["v3", "v4"].includes(this.version)) {
             const errorString = `Lavalink Node (${this.poolAddress}) does not provide any /${this.version}/info`;
             throw new Error(errorString);
@@ -703,60 +727,66 @@ export class LavalinkNode {
         switch (payload.op) {
             case "stats":
                 delete payload.op;
-                this.stats = ({ ...payload } as unknown) as NodeStats;
+                this.stats = { ...payload } as unknown as NodeStats;
                 break;
-            case "playerUpdate": {
-                const player = this.NodeManager.LavalinkManager.getPlayer(payload.guildId);
-                if (!player) return;
+            case "playerUpdate":
+                {
+                    const player = this.NodeManager.LavalinkManager.getPlayer(payload.guildId);
+                    if (!player) return;
 
-                const oldPlayer = player?.toJSON();
+                    const oldPlayer = player?.toJSON();
 
-                if (player.get("internal_updateInterval")) clearInterval(player.get("internal_updateInterval"));
-                // override the position
-                player.position = payload.state.position || 0;
-                player.lastPosition = payload.state.position || 0;
+                    if (player.get("internal_updateInterval")) clearInterval(player.get("internal_updateInterval"));
+                    // override the position
+                    player.position = payload.state.position || 0;
+                    player.lastPosition = payload.state.position || 0;
 
-                player.connected = payload.state.connected;
-                
-                player.ping.ws = payload.state.ping >= 0 ? payload.state.ping : player.ping.ws <= 0 && player.connected ? null : player.ping.ws || 0;
-                if (!player.createdTimeStamp && payload.state.time) player.createdTimeStamp = payload.state.time;
+                    player.connected = payload.state.connected;
 
-                if (typeof this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval === "number" && this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval >= 10) {
-                    player.set("internal_updateInterval", setInterval(() => {
-                        player.position += this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250;
+                    player.ping.ws = payload.state.ping >= 0 ? payload.state.ping : player.ping.ws <= 0 && player.connected ? null : player.ping.ws || 0;
+                    if (!player.createdTimeStamp && payload.state.time) player.createdTimeStamp = payload.state.time;
+
+                    if (typeof this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval === "number" && this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval >= 10) {
+                        player.set(
+                            "internal_updateInterval",
+                            setInterval(() => {
+                                player.position += this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250;
+                                if (player.filterManager.filterUpdatedState >= 1) {
+                                    player.filterManager.filterUpdatedState++;
+                                    const maxMins = 8;
+                                    const currentDuration = player.queue.current?.info?.duration || 0;
+                                    if (currentDuration <= maxMins * 6e4 || isAbsolute(player.queue.current?.info?.uri)) {
+                                        if (player.filterManager.filterUpdatedState >= ((this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250) > 400 ? 2 : 3)) {
+                                            player.filterManager.filterUpdatedState = 0;
+                                            player.seek(player.position);
+                                        }
+                                    } else {
+                                        player.filterManager.filterUpdatedState = 0;
+                                    }
+                                }
+                            }, this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250)
+                        );
+                    } else {
                         if (player.filterManager.filterUpdatedState >= 1) {
-                            player.filterManager.filterUpdatedState++
+                            // if no interval but instafix available, findable via the "filterUpdatedState" property
                             const maxMins = 8;
                             const currentDuration = player.queue.current?.info?.duration || 0;
-                            if (currentDuration <= maxMins * 6e4 || isAbsolute(player.queue.current?.info?.uri)) {
-                                if (player.filterManager.filterUpdatedState >= ((this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250) > 400 ? 2 : 3)) {
-                                    player.filterManager.filterUpdatedState = 0;
-                                    player.seek(player.position);
-                                }
-                            } else {
-                                player.filterManager.filterUpdatedState = 0;
-                            }
+                            if (currentDuration <= maxMins * 6e4 || isAbsolute(player.queue.current?.info?.uri)) player.seek(player.position);
+                            player.filterManager.filterUpdatedState = 0;
                         }
-                    }, this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250))
-                } else {
-                    if (player.filterManager.filterUpdatedState >= 1) { // if no interval but instafix available, findable via the "filterUpdatedState" property
-                        const maxMins = 8;
-                        const currentDuration = player.queue.current?.info?.duration || 0;
-                        if (currentDuration <= maxMins * 6e4 || isAbsolute(player.queue.current?.info?.uri)) player.seek(player.position);
-                        player.filterManager.filterUpdatedState = 0;
                     }
-                }
 
-                this.NodeManager.LavalinkManager.emit("playerUpdate", oldPlayer, player);
-            } break;
+                    this.NodeManager.LavalinkManager.emit("playerUpdate", oldPlayer, player);
+                }
+                break;
             case "event":
                 this.handleEvent(payload);
                 break;
-            case "ready":  // payload: { resumed: false, sessionId: 'ytva350aevn6n9n8', op: 'ready' }
+            case "ready": // payload: { resumed: false, sessionId: 'ytva350aevn6n9n8', op: 'ready' }
                 this.sessionId = payload.sessionId;
                 this.resuming.enabled = payload.resumed;
-                if(payload.resumed === true) {
-                    this.NodeManager.emit("resumed", this, payload, await this.fetchAllPlayers())
+                if (payload.resumed === true) {
+                    this.NodeManager.emit("resumed", this, payload, await this.fetchAllPlayers());
                 }
                 break;
             default:
@@ -772,16 +802,36 @@ export class LavalinkNode {
         if (!player) return;
 
         switch (payload.type) {
-            case "TrackStartEvent": this.trackStart(player, player.queue.current as Track, payload); break;
-            case "TrackEndEvent": this.trackEnd(player, player.queue.current as Track, payload); break;
-            case "TrackStuckEvent": this.trackStuck(player, player.queue.current as Track, payload); break;
-            case "TrackExceptionEvent": this.trackError(player, player.queue.current as Track, payload); break;
-            case "WebSocketClosedEvent": this.socketClosed(player, payload); break;
-            case "SegmentsLoaded": this.SponsorBlockSegmentLoaded(player, player.queue.current as Track, payload); break;
-            case "SegmentSkipped": this.SponsorBlockSegmentkipped(player, player.queue.current as Track, payload); break;
-            case "ChaptersLoaded": this.SponsorBlockChaptersLoaded(player, player.queue.current as Track, payload); break;
-            case "ChapterStarted": this.SponsorBlockChapterStarted(player, player.queue.current as Track, payload); break;
-            default: this.NodeManager.emit("error", this, new Error(`Node#event unknown event '${(payload as PlayerEventType & PlayerEvents).type}'.`), (payload as PlayerEventType & PlayerEvents)); break;
+            case "TrackStartEvent":
+                this.trackStart(player, player.queue.current as Track, payload);
+                break;
+            case "TrackEndEvent":
+                this.trackEnd(player, player.queue.current as Track, payload);
+                break;
+            case "TrackStuckEvent":
+                this.trackStuck(player, player.queue.current as Track, payload);
+                break;
+            case "TrackExceptionEvent":
+                this.trackError(player, player.queue.current as Track, payload);
+                break;
+            case "WebSocketClosedEvent":
+                this.socketClosed(player, payload);
+                break;
+            case "SegmentsLoaded":
+                this.SponsorBlockSegmentLoaded(player, player.queue.current as Track, payload);
+                break;
+            case "SegmentSkipped":
+                this.SponsorBlockSegmentkipped(player, player.queue.current as Track, payload);
+                break;
+            case "ChaptersLoaded":
+                this.SponsorBlockChaptersLoaded(player, player.queue.current as Track, payload);
+                break;
+            case "ChapterStarted":
+                this.SponsorBlockChapterStarted(player, player.queue.current as Track, payload);
+                break;
+            default:
+                this.NodeManager.emit("error", this, new Error(`Node#event unknown event '${(payload as PlayerEventType & PlayerEvents).type}'.`), payload as PlayerEventType & PlayerEvents);
+                break;
         }
         return;
     }
@@ -792,7 +842,7 @@ export class LavalinkNode {
         player.paused = false;
 
         // don't emit the event if previous track == new track aka track loop
-        if(this.NodeManager.LavalinkManager.options?.emitNewSongsOnly === true && player.queue.previous[0]?.info?.identifier === track?.info?.identifier) return;
+        if (this.NodeManager.LavalinkManager.options?.emitNewSongsOnly === true && player.queue.previous[0]?.info?.identifier === track?.info?.identifier) return;
 
         return this.NodeManager.LavalinkManager.emit("trackStart", player, track, payload);
     }
@@ -813,7 +863,8 @@ export class LavalinkNode {
         }
         // remove tracks from the queue
         if (player.repeatMode !== "track" || player.get("internal_skipped")) await queueTrackEnd(player);
-        else if (player.queue.current) { // If there was a current Track already and repeatmode === true, add it to the queue.
+        else if (player.queue.current) {
+            // If there was a current Track already and repeatmode === true, add it to the queue.
             player.queue.previous.unshift(player.queue.current as Track);
             if (player.queue.previous.length > player.queue.options.maxPreviousTracks) player.queue.previous.splice(player.queue.options.maxPreviousTracks, player.queue.previous.length);
             await player.queue.utils.save();
@@ -835,13 +886,9 @@ export class LavalinkNode {
         // if no track available, end queue
         if (!player.queue.current) return this.queueEnd(player, track, payload);
         // play track if autoSkip is true
-        return (this.NodeManager.LavalinkManager.options.autoSkip && player.queue.current) && player.play({ noReplace: true });
+        return this.NodeManager.LavalinkManager.options.autoSkip && player.queue.current && player.play({ noReplace: true });
     }
-    private async trackError(
-        player: Player,
-        track: Track,
-        payload: TrackExceptionEvent
-    ) {
+    private async trackError(player: Player, track: Track, payload: TrackExceptionEvent) {
         this.NodeManager.LavalinkManager.emit("trackError", player, track, payload);
         return; // get's handled by trackEnd
         // If there are no songs in the queue
@@ -851,59 +898,58 @@ export class LavalinkNode {
         // if no track available, end queue
         if (!player.queue.current) return this.queueEnd(player, track, payload);
         // play track if autoSkip is true
-        return (this.NodeManager.LavalinkManager.options.autoSkip && player.queue.current) && player.play({ noReplace: true });
+        return this.NodeManager.LavalinkManager.options.autoSkip && player.queue.current && player.play({ noReplace: true });
     }
     private socketClosed(player: Player, payload: WebSocketClosedEvent) {
         return this.NodeManager.LavalinkManager.emit("playerSocketClosed", player, payload);
     }
     // SPONSOR BLOCK EVENT FUNCTIONS
 
-    private SponsorBlockSegmentLoaded(player:Player, track: Track, payload:SponsorBlockSegmentsLoaded) {
+    private SponsorBlockSegmentLoaded(player: Player, track: Track, payload: SponsorBlockSegmentsLoaded) {
         return this.NodeManager.LavalinkManager.emit("SegmentsLoaded", player, track, payload);
     }
-    private SponsorBlockSegmentkipped(player:Player, track: Track, payload:SponsorBlockSegmentSkipped) {
+    private SponsorBlockSegmentkipped(player: Player, track: Track, payload: SponsorBlockSegmentSkipped) {
         return this.NodeManager.LavalinkManager.emit("SegmentSkipped", player, track, payload);
     }
-    private SponsorBlockChaptersLoaded(player:Player, track: Track, payload:SponsorBlockChaptersLoaded) {
+    private SponsorBlockChaptersLoaded(player: Player, track: Track, payload: SponsorBlockChaptersLoaded) {
         return this.NodeManager.LavalinkManager.emit("ChaptersLoaded", player, track, payload);
     }
-    private SponsorBlockChapterStarted(player:Player, track: Track, payload:SponsorBlockChapterStarted) {
+    private SponsorBlockChapterStarted(player: Player, track: Track, payload: SponsorBlockChapterStarted) {
         return this.NodeManager.LavalinkManager.emit("ChapterStarted", player, track, payload);
     }
 
     // SPONSOR BLOCK EXECUTE FUNCTIONS
 
-    public async getSponsorBlock(player:Player):Promise<SponsorBlockSegment[]> {
+    public async getSponsorBlock(player: Player): Promise<SponsorBlockSegment[]> {
         // no plugin enabled
-        if(!this.info.plugins.find(v => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
+        if (!this.info.plugins.find((v) => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
         // do the request
-        return await this.request(`/sessions/${this.sessionId}/players/${player.guildId}/sponsorblock/categories`) as SponsorBlockSegment[];
+        return (await this.request(`/sessions/${this.sessionId}/players/${player.guildId}/sponsorblock/categories`)) as SponsorBlockSegment[];
     }
-    public async setSponsorBlock(player:Player, segments:SponsorBlockSegment[] = ["sponsor", "selfpromo"]):Promise<void> {
+    public async setSponsorBlock(player: Player, segments: SponsorBlockSegment[] = ["sponsor", "selfpromo"]): Promise<void> {
         // no plugin enabled
-        if(!this.info.plugins.find(v => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
+        if (!this.info.plugins.find((v) => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
         // no segments length
-        if(!segments.length) throw new RangeError("No Segments provided. Did you ment to use 'deleteSponsorBlock'?")
+        if (!segments.length) throw new RangeError("No Segments provided. Did you ment to use 'deleteSponsorBlock'?");
         // a not valid segment
-        if(segments.some(v => !validSponsorBlocks.includes(v.toLowerCase()))) throw new SyntaxError(`You provided a sponsorblock which isn't valid, valid ones are: ${validSponsorBlocks.map(v => `'${v}'`).join(", ")}`)
+        if (segments.some((v) => !validSponsorBlocks.includes(v.toLowerCase()))) throw new SyntaxError(`You provided a sponsorblock which isn't valid, valid ones are: ${validSponsorBlocks.map((v) => `'${v}'`).join(", ")}`);
         // do the request
         await this.request(`/sessions/${this.sessionId}/players/${player.guildId}/sponsorblock/categories`, (r) => {
             r.method = "PUT";
-            r.headers = { Authorization: this.options.authorization, 'Content-Type': 'application/json' }
-            r.body = JSON.stringify(segments.map(v => v.toLowerCase()));
+            r.headers = { Authorization: this.options.authorization, "Content-Type": "application/json" };
+            r.body = JSON.stringify(segments.map((v) => v.toLowerCase()));
         });
         return;
     }
-    public async deleteSponsorBlock(player:Player):Promise<void> {
+    public async deleteSponsorBlock(player: Player): Promise<void> {
         // no plugin enabled
-        if(!this.info.plugins.find(v => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
+        if (!this.info.plugins.find((v) => v.name === "sponsorblock-plugin")) throw new RangeError(`there is no sponsorblock-plugin available in the lavalink node: ${this.id}`);
         // do the request
         await this.request(`/sessions/${this.sessionId}/players/${player.guildId}/sponsorblock/categories`, (r) => {
             r.method = "DELETE";
         });
         return;
     }
-
 
     // UTIL FOR QUEUE END
 
@@ -913,11 +959,11 @@ export class LavalinkNode {
         player.playing = false;
         player.set("internal_stopPlaying", undefined);
 
-        if(typeof this.NodeManager.LavalinkManager.options?.playerOptions?.onEmptyQueue?.autoPlayFunction === "function" && typeof player.get("internal_autoplayStopPlaying") === "undefined") {
+        if (typeof this.NodeManager.LavalinkManager.options?.playerOptions?.onEmptyQueue?.autoPlayFunction === "function" && typeof player.get("internal_autoplayStopPlaying") === "undefined") {
             await this.NodeManager.LavalinkManager.options?.playerOptions?.onEmptyQueue?.autoPlayFunction(player, track);
-            if(player.queue.tracks.length > 0) await queueTrackEnd(player);
-            if(player.queue.current) {
-                if(payload.type === "TrackEndEvent") this.NodeManager.LavalinkManager.emit("trackEnd", player, track, payload);
+            if (player.queue.tracks.length > 0) await queueTrackEnd(player);
+            if (player.queue.current) {
+                if (payload.type === "TrackEndEvent") this.NodeManager.LavalinkManager.emit("trackEnd", player, track, payload);
                 return player.play({ noReplace: true, paused: false });
             }
         }
@@ -929,20 +975,22 @@ export class LavalinkNode {
             await player.queue.utils.save();
         }
 
-        if(typeof this.NodeManager.LavalinkManager.options.playerOptions?.onEmptyQueue?.destroyAfterMs === "number" && !isNaN(this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs) && this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs >= 0) {
-            if(this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs === 0) return player.destroy(DestroyReasons.QueueEmpty);
+        if (typeof this.NodeManager.LavalinkManager.options.playerOptions?.onEmptyQueue?.destroyAfterMs === "number" && !isNaN(this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs) && this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs >= 0) {
+            if (this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs === 0) return player.destroy(DestroyReasons.QueueEmpty);
             else {
-                if(player.get("internal_queueempty")) {
+                if (player.get("internal_queueempty")) {
                     clearTimeout(player.get("internal_queueempty"));
                     player.set("internal_queueempty", undefined);
                 }
-                player.set("internal_queueempty", setTimeout(() => {
-                    player.destroy(DestroyReasons.QueueEmpty);
-                }, this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs))
+                player.set(
+                    "internal_queueempty",
+                    setTimeout(() => {
+                        player.destroy(DestroyReasons.QueueEmpty);
+                    }, this.NodeManager.LavalinkManager.options.playerOptions.onEmptyQueue?.destroyAfterMs)
+                );
             }
         }
 
         return this.NodeManager.LavalinkManager.emit("queueEnd", player, track, payload);
     }
-
 }

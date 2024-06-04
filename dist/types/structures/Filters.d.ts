@@ -136,9 +136,9 @@ export declare class FilterManager {
     /** Function to find out if currently there is a custom timescamle etc. filter applied */
     isCustomFilterActive(): boolean;
     /**
-   * Sets the players equalizer band on-top of the existing ones.
-   * @param bands
-   */
+     * Sets the players equalizer band on-top of the existing ones.
+     * @param bands
+     */
     setEQ(bands: EQBand | EQBand[]): Promise<this>;
     /** Clears the equalizer bands. */
     clearEQ(): Promise<this>;
@@ -301,11 +301,11 @@ export interface FilterData {
     lowPass?: LowPassFilter;
     pluginFilters?: {
         "lavalink-filter-plugin"?: {
-            "echo"?: {
+            echo?: {
                 delay?: number;
                 decay?: number;
             };
-            "reverb"?: {
+            reverb?: {
                 delays?: number[];
                 gains?: number[];
             };
