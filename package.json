@@ -11,9 +11,7 @@
     "build:esm": "node tools/cleanup esm && tsc -p config/tsconfig.esm.json",
     "build:types": "node tools/cleanup types && tsc -p config/tsconfig.types.json",
     "clean": "node tools/cleanup",
-    "format": "prettier --write src/**/*.ts --config ./.prettierrc.js",
-    "test": "node -v",
-    "docs": "npx typedoc"
+    "format": "prettier --write src/**/*.ts --config ./.prettierrc.js"
   },
   "publishConfig": {
     "access": "public"
