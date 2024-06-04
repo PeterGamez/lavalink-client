@@ -304,7 +304,13 @@ export class LavalinkNode {
         } as SearchResult;
     }
 
-    async lavaSearch(query: LavaSearchQuery, requestUser: unknown, throwOnEmpty: boolean = false) {
+    /**
+     * Search something raw on the node, please note only add tracks to players of that node
+     * @param query LavaSearchQuery Object
+     * @param requestUser Request User for creating the player(s)
+     * @returns LavaSearchResponse
+     */
+    public async lavaSearch(query: LavaSearchQuery, requestUser: unknown, throwOnEmpty: boolean = false) {
         const Query = this.NodeManager.LavalinkManager.utils.transformLavaSearchQuery(query);
 
         if (Query.source) this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);

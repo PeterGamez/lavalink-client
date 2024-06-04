@@ -230,7 +230,7 @@ export class Player {
      * Play the next track from the queue / a specific track, with playoptions for Lavalink
      * @param options
      */
-    async play(options: Partial<PlayOptions> = {}) {
+    public async play(options: Partial<PlayOptions> = {}) {
         if (this.get("internal_queueempty")) {
             clearTimeout(this.get("internal_queueempty"));
             this.set("internal_queueempty", undefined);
@@ -342,7 +342,7 @@ export class Player {
      * @param volume The Volume in percent
      * @param ignoreVolumeDecrementer If it should ignore the volumedecrementer option
      */
-    async setVolume(volume: number, ignoreVolumeDecrementer: boolean = false) {
+    public async setVolume(volume: number, ignoreVolumeDecrementer: boolean = false) {
         volume = Number(volume);
 
         if (isNaN(volume)) throw new TypeError("Volume must be a number.");
@@ -367,7 +367,7 @@ export class Player {
      * @param requestUser
      * @returns
      */
-    async lavaSearch(query: LavaSearchQuery, requestUser: unknown) {
+    public async lavaSearch(query: LavaSearchQuery, requestUser: unknown) {
         return this.node.lavaSearch(query, requestUser);
     }
 
@@ -388,7 +388,7 @@ export class Player {
      * @param query Query for your data
      * @param requestUser
      */
-    async search(query: SearchQuery, requestUser: unknown) {
+    public async search(query: SearchQuery, requestUser: unknown) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
 
         if (["bcsearch", "bandcamp"].includes(Query.source)) return await bandCampSearch(this, Query.query, requestUser);
@@ -396,7 +396,7 @@ export class Player {
         return this.node.search(Query, requestUser);
     }
 
-    async lavaLyrics(skipTrackSource = false) {
+    public async lavaLyrics(skipTrackSource = false) {
         const encoded = this.queue.current?.encoded;
         if (!encoded) throw new Error("No track is currently playing");
 
@@ -406,7 +406,7 @@ export class Player {
     /**
      * Pause the player
      */
-    async pause() {
+    public async pause() {
         if (this.paused && !this.playing) throw new Error("Player is already paused - not able to pause.");
         this.paused = true;
         const now = performance.now();
@@ -418,7 +418,7 @@ export class Player {
     /**
      * Resume the Player
      */
-    async resume() {
+    public async resume() {
         if (!this.paused) throw new Error("Player isn't paused - not able to resume.");
         this.paused = false;
         const now = performance.now();
@@ -431,7 +431,7 @@ export class Player {
      * Seek to a specific Position
      * @param position
      */
-    async seek(position: number) {
+    public async seek(position: number) {
         if (!this.queue.current) return undefined;
 
         position = Number(position);
@@ -457,7 +457,7 @@ export class Player {
      * Set the Repeatmode of the Player
      * @param repeatMode
      */
-    async setRepeatMode(repeatMode: RepeatMode) {
+    public async setRepeatMode(repeatMode: RepeatMode) {
         if (!["off", "track", "queue"].includes(repeatMode)) throw new RangeError("Repeatmode must be either 'off', 'track', or 'queue'");
         this.repeatMode = repeatMode;
         return this;
@@ -467,7 +467,7 @@ export class Player {
      * Skip the current song, or a specific amount of songs
      * @param amount provide the index of the next track to skip to
      */
-    async skip(skipTo: number = 0, throwError: boolean = true) {
+    public async skip(skipTo: number = 0, throwError: boolean = true) {
         if (!this.queue.tracks.length && (throwError || (typeof skipTo === "boolean" && skipTo === true))) throw new RangeError("Can't skip more than the queue size");
 
         if (typeof skipTo === "number" && skipTo > 1) {
@@ -490,7 +490,7 @@ export class Player {
      * Clears the queue and stops playing. Does not destroy the Player and not leave the channel
      * @returns
      */
-    async stopPlaying(clearQueue: boolean = true, executeAutoplay: boolean = false) {
+    public async stopPlaying(clearQueue: boolean = true, executeAutoplay: boolean = false) {
         // use internal_stopPlaying on true, so that it doesn't utilize current loop states. on trackEnd event
         this.set("internal_stopPlaying", true);
 

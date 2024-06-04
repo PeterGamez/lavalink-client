@@ -120,7 +120,7 @@ export class NodeManager extends EventEmitter {
         }
         return counter;
     }
-    createNode(options: LavalinkNodeOptions) {
+    public createNode(options: LavalinkNodeOptions) {
         if (this.nodes.has(options.id || `${options.host}:${options.port}`)) return this.nodes.get(options.id || `${options.host}:${options.port}`)!;
         const newNode = new LavalinkNode(options, this);
         this.nodes.set(newNode.id, newNode);
@@ -166,7 +166,7 @@ export class NodeManager extends EventEmitter {
         }
     }
 
-    deleteNode(node: LavalinkNodeIdentifier | LavalinkNode) {
+    public deleteNode(node: LavalinkNodeIdentifier | LavalinkNode) {
         const decodeNode = typeof node === "string" ? this.nodes.get(node) : node || this.leastUsedNodes()[0];
         if (!decodeNode) throw new Error("Node was not found");
         decodeNode.destroy(DestroyReasons.NodeDeleted);
