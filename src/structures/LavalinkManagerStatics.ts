@@ -42,6 +42,10 @@ export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | Cli
     yandexmusic: "ymsearch",
     yandex: "ymsearch",
     ymsearch: "ymsearch",
+    // pornhub
+    pornhub: "phsearch",
+    phsearch: "phsearch",
+    ph: "phsearch",
     // speak PLUGIN
     speak: "speak",
     tts: "tts",
@@ -64,10 +68,11 @@ export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | Cli
 
 export const LavalinkPlugins = {
     DuncteBot_Plugin: "DuncteBot-plugin",
-    LavaSrc: "lavasrc-plugin",
     GoogleCloudTTS: "tts-plugin",
+    LavaSrc: "lavasrc-plugin",
     LavaSearch: "lavasearch-plugin",
     LavalinkFilterPlugin: "lavalink-filter-plugin",
+    YoutubeSource: "youtube-source",
 };
 
 export const SourceLinksRegexes: Record<SourcesRegex, RegExp> = {
@@ -116,4 +121,5 @@ export const SourceLinksRegexes: Record<SourcesRegex, RegExp> = {
     mixcloud: /https:\/\/www\.mixcloud\.com\//,
     musicYandex: /https:\/\/music\.yandex\.ru\//,
     radiohost: /https?:\/\/[^.\s]+\.radiohost\.de\/(\S+)/,
+    pornhub: /https:\/\/www\.pornhub\.com\//,
 };
