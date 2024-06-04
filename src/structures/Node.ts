@@ -6,7 +6,7 @@ import WebSocket from "ws";
 import { NodeManager } from "./NodeManager";
 import { DestroyReasons, DestroyReasonsType, Player } from "./Player";
 import { LavalinkTrack, PluginInfo, Track } from "./Track";
-import { Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaSearchQuery, LavaSearchResponse, LoadTypes, NodeSymbol, PlayerEvents, PlayerEventType, PlayerUpdateInfo, queueTrackEnd, RoutePlanner, SearchQuery, SearchResult, Session, SponsorBlockChaptersLoaded, SponsorBlockChapterStarted, SponsorBlockSegmentSkipped, SponsorBlockSegmentsLoaded, TrackEndEvent, TrackExceptionEvent, TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent } from "./Utils";
+import { Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaLyricsResponse, LavaSearchQuery, LavaSearchResponse, LoadTypes, NodeSymbol, PlayerEvents, PlayerEventType, PlayerUpdateInfo, queueTrackEnd, RoutePlanner, SearchQuery, SearchResult, Session, SponsorBlockChaptersLoaded, SponsorBlockChapterStarted, SponsorBlockSegmentSkipped, SponsorBlockSegmentsLoaded, TrackEndEvent, TrackExceptionEvent, TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent } from "./Utils";
 
 /** Modifies any outgoing REST requests. */
 export type ModifyRequest = (options: Dispatcher.RequestOptions) => void;
@@ -329,6 +329,22 @@ export class LavalinkNode {
             texts: res.texts?.map((v) => ({ text: v.text, pluginInfo: (v as unknown as { plugin: unknown })?.plugin || v.pluginInfo })) || [],
             pluginInfo: res.pluginInfo || (res as unknown as { plugin: unknown })?.plugin,
         } as LavaSearchResponse;
+    }
+
+    public async lavaLyrics(encodedTrack: string, skipTrackSource = false) {
+        if (!encodedTrack) throw new Error("No encoded track provided");
+
+        const { request } = await this.rawRequest(`/lyrics?track=${encodedTrack}&skipTrackSource=${skipTrackSource}`);
+
+        const res = (request.statusCode === 204 ? {} : await request.body.json()) as LavaLyricsResponse;
+
+        return {
+            sourceName: res.sourceName || null,
+            provider: res.provider || null,
+            text: res.text || null,
+            lines: res.lines || [],
+            plugin: res.plugin || {},
+        } as LavaLyricsResponse;
     }
 
     /**
