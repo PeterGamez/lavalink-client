@@ -5,5 +5,4 @@ tools
 .npmignore
 .prettierrc.js
 LICENSE
-package-lock.json
 tsconfig.json
