@@ -361,6 +361,12 @@ export class Player {
         return this;
     }
 
+    /**
+     * Search Track or Playlist with LavaSearch Plugin
+     * @param query Query for your data
+     * @param requestUser
+     * @returns
+     */
     async lavaSearch(query: LavaSearchQuery, requestUser: unknown) {
         return this.node.lavaSearch(query, requestUser);
     }
@@ -376,8 +382,9 @@ export class Player {
     public async deleteSponsorBlock() {
         return this.node.deleteSponsorBlock(this);
     }
+
     /**
-     *
+     * Search Track or Playlist
      * @param query Query for your data
      * @param requestUser
      */
