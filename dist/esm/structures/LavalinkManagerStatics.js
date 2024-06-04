@@ -40,6 +40,10 @@ export const DefaultSources = {
     yandexmusic: "ymsearch",
     yandex: "ymsearch",
     ymsearch: "ymsearch",
+    // pornhub
+    pornhub: "phsearch",
+    phsearch: "phsearch",
+    ph: "phsearch",
     // speak PLUGIN
     speak: "speak",
     tts: "tts",
@@ -61,10 +65,11 @@ export const DefaultSources = {
 };
 export const LavalinkPlugins = {
     DuncteBot_Plugin: "DuncteBot-plugin",
-    LavaSrc: "lavasrc-plugin",
     GoogleCloudTTS: "tts-plugin",
+    LavaSrc: "lavasrc-plugin",
     LavaSearch: "lavasearch-plugin",
     LavalinkFilterPlugin: "lavalink-filter-plugin",
+    YoutubeSource: "youtube-source",
 };
 export const SourceLinksRegexes = {
     /** DEFAULT SUPPORTED BY LAVALINK */
@@ -106,4 +111,5 @@ export const SourceLinksRegexes = {
     mixcloud: /https:\/\/www\.mixcloud\.com\//,
     musicYandex: /https:\/\/music\.yandex\.ru\//,
     radiohost: /https?:\/\/[^.\s]+\.radiohost\.de\/(\S+)/,
+    pornhub: /https:\/\/www\.pornhub\.com\//,
 };

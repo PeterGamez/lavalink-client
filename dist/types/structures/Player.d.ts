@@ -163,12 +163,18 @@ export declare class Player {
      * @param ignoreVolumeDecrementer If it should ignore the volumedecrementer option
      */
     setVolume(volume: number, ignoreVolumeDecrementer?: boolean): Promise<this>;
+    /**
+     * Search Track or Playlist with LavaSearch Plugin
+     * @param query Query for your data
+     * @param requestUser
+     * @returns
+     */
     lavaSearch(query: LavaSearchQuery, requestUser: unknown): Promise<import("./Utils").SearchResult | import("./Utils").LavaSearchResponse>;
     setSponsorBlock(segments?: SponsorBlockSegment[]): Promise<void>;
     getSponsorBlock(): Promise<SponsorBlockSegment[]>;
     deleteSponsorBlock(): Promise<void>;
     /**
-     *
+     * Search Track or Playlist
      * @param query Query for your data
      * @param requestUser
      */

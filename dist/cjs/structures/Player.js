@@ -241,6 +241,12 @@ class Player {
         this.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
         return this;
     }
+    /**
+     * Search Track or Playlist with LavaSearch Plugin
+     * @param query Query for your data
+     * @param requestUser
+     * @returns
+     */
     async lavaSearch(query, requestUser) {
         return this.node.lavaSearch(query, requestUser);
     }
@@ -254,7 +260,7 @@ class Player {
         return this.node.deleteSponsorBlock(this);
     }
     /**
-     *
+     * Search Track or Playlist
      * @param query Query for your data
      * @param requestUser
      */
