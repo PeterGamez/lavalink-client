@@ -3,12 +3,12 @@
  */
 const config = {
     arrowParens: "always",
-    bracketSameLine: false,
+    bracketSameLine: true,
     endOfLine: "lf",
     embeddedLanguageFormatting: "auto",
     htmlWhitespaceSensitivity: "ignore",
     jsxSingleQuote: false,
-    parser: "typescript",
+    // parser: "typescript",
     proseWrap: "preserve",
     printWidth: Infinity,
     trailingComma: "es5",
