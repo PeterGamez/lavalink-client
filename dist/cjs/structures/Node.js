@@ -158,6 +158,12 @@ class LavalinkNode {
             tracks: (resTracks.length ? resTracks.map((t) => this.NodeManager.LavalinkManager.utils.buildTrack(t, requestUser)) : []),
         };
     }
+    /**
+     * Search something raw on the node, please note only add tracks to players of that node
+     * @param query LavaSearchQuery Object
+     * @param requestUser Request User for creating the player(s)
+     * @returns LavaSearchResponse
+     */
     async lavaSearch(query, requestUser, throwOnEmpty = false) {
         const Query = this.NodeManager.LavalinkManager.utils.transformLavaSearchQuery(query);
         if (Query.source)
@@ -181,6 +187,21 @@ class LavalinkNode {
             playlists: res.playlists?.map((v) => ({ info: v.info, pluginInfo: v?.plugin || v.pluginInfo, tracks: v.tracks.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
             texts: res.texts?.map((v) => ({ text: v.text, pluginInfo: v?.plugin || v.pluginInfo })) || [],
             pluginInfo: res.pluginInfo || res?.plugin,
+        };
+    }
+    async lavaLyrics(encodedTrack, skipTrackSource = false) {
+        if (!encodedTrack)
+            throw new Error("No encoded track provided");
+        if (!this.info.plugins.find((v) => v.name === "lavalyrics-plugin"))
+            throw new RangeError(`there is no lavalyrics-plugin available in the lavalink node: ${this.id}`);
+        const { request } = await this.rawRequest(`/lyrics?track=${encodeURI(encodedTrack)}&skipTrackSource=${skipTrackSource}`);
+        const res = (request.statusCode === 204 ? {} : await request.body.json());
+        return {
+            sourceName: res.sourceName || null,
+            provider: res.provider || null,
+            text: res.text || null,
+            lines: res.lines || [],
+            plugin: res.plugin || {},
         };
     }
     /**

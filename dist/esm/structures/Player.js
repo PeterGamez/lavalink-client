@@ -267,6 +267,12 @@ export class Player {
             return await bandCampSearch(this, Query.query, requestUser);
         return this.node.search(Query, requestUser);
     }
+    async lavaLyrics(skipTrackSource = false) {
+        const encoded = this.queue.current?.encoded;
+        if (!encoded)
+            throw new Error("No track is currently playing");
+        return this.node.lavaLyrics(encoded, skipTrackSource);
+    }
     /**
      * Pause the player
      */

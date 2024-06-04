@@ -340,7 +340,9 @@ export class LavalinkNode {
     public async lavaLyrics(encodedTrack: string, skipTrackSource = false) {
         if (!encodedTrack) throw new Error("No encoded track provided");
 
-        const { request } = await this.rawRequest(`/lyrics?track=${encodedTrack}&skipTrackSource=${skipTrackSource}`);
+        if (!this.info.plugins.find((v) => v.name === "lavalyrics-plugin")) throw new RangeError(`there is no lavalyrics-plugin available in the lavalink node: ${this.id}`);
+
+        const { request } = await this.rawRequest(`/lyrics?track=${encodeURI(encodedTrack)}&skipTrackSource=${skipTrackSource}`);
 
         const res = (request.statusCode === 204 ? {} : await request.body.json()) as LavaLyricsResponse;
 

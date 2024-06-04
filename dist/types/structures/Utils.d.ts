@@ -448,13 +448,27 @@ export interface LavaSearchResponse {
     /** Addition result data provided by plugins */
     pluginInfo: PluginInfo;
 }
+export interface LavaLyricsResponse {
+    sourceName: string;
+    provider: string;
+    text: string;
+    lines: LyricsLine[];
+    plugin: PluginInfo;
+}
+interface LyricsLine {
+    timestamp: number;
+    duration: number;
+    line: string;
+    plugin: PluginInfo;
+}
 /** SearchQuery Object for raw lavalink requests */
-export type SearchQuery = {
+type SearchQuerys = {
     /** lavalink search Query / identifier string */
     query: string;
     /** Source to append to the search query string */
     source?: SearchPlatform;
-} | /** Our just the search query / identifier string */ string;
+};
+export type SearchQuery = SearchQuerys | string;
 /** SearchQuery Object for Lavalink LavaSearch Plugin requests */
 export type LavaSearchQuery = {
     /** lavalink search Query / identifier string */

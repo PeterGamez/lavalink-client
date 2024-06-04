@@ -4,7 +4,7 @@ import { Dispatcher, Pool } from "undici";
 import { NodeManager } from "./NodeManager";
 import { DestroyReasonsType, Player } from "./Player";
 import { Track } from "./Track";
-import { Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaSearchQuery, LavaSearchResponse, PlayerUpdateInfo, RoutePlanner, SearchQuery, SearchResult, Session } from "./Utils";
+import { Base64, InvalidLavalinkRestRequest, LavalinkPlayer, LavaLyricsResponse, LavaSearchQuery, LavaSearchResponse, PlayerUpdateInfo, RoutePlanner, SearchQuery, SearchResult, Session } from "./Utils";
 /** Modifies any outgoing REST requests. */
 export type ModifyRequest = (options: Dispatcher.RequestOptions) => void;
 export declare const validSponsorBlocks: string[];
@@ -176,7 +176,14 @@ export declare class LavalinkNode {
      * @returns Searchresult
      */
     search(query: SearchQuery, requestUser: unknown): Promise<SearchResult>;
+    /**
+     * Search something raw on the node, please note only add tracks to players of that node
+     * @param query LavaSearchQuery Object
+     * @param requestUser Request User for creating the player(s)
+     * @returns LavaSearchResponse
+     */
     lavaSearch(query: LavaSearchQuery, requestUser: unknown, throwOnEmpty?: boolean): Promise<SearchResult | LavaSearchResponse>;
+    lavaLyrics(encodedTrack: string, skipTrackSource?: boolean): Promise<LavaLyricsResponse>;
     /**
      * Update the Player State on the Lavalink Server
      * @param data

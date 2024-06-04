@@ -179,6 +179,7 @@ export declare class Player {
      * @param requestUser
      */
     search(query: SearchQuery, requestUser: unknown): Promise<import("./Utils").SearchResult | import("./Utils").UnresolvedSearchResult>;
+    lavaLyrics(skipTrackSource?: boolean): Promise<import("./Utils").LavaLyricsResponse>;
     /**
      * Pause the player
      */
