@@ -44,16 +44,14 @@
   },
   "homepage": "https://lc4.gitbook.io/lavalink-client/",
   "devDependencies": {
-    "@types/node": "^20.4.8",
+    "@types/node": "^20.8.3",
     "@types/ws": "^8.5.5",
-    "ts-loader": "^9.4.4",
-    "typedoc": "^0.25.4",
-    "typedoc-theme-hierarchy": "^4.1.2",
-    "typescript": "^5.1.6"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
-    "undici": "^5.23.0",
-    "tslib": "^2.6.1",
-    "ws": "^8.13.0"
+    "tslib": "^2.6.2",
+    "undici": "^6.18.2",
+    "ws": "^8.17.0"
   }
 }
