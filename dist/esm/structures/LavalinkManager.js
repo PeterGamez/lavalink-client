@@ -4,21 +4,11 @@ import { DestroyReasons, Player } from "./Player";
 import { DefaultQueueStore } from "./Queue";
 import { ManagerUtils, MiniMap } from "./Utils";
 export class LavalinkManager extends EventEmitter {
-    /** The Options of LavalinkManager (changeable) */
     options;
-    /** LavalinkManager's NodeManager to manage all Nodes */
     nodeManager;
-    /** LavalinkManager's Utils Class */
     utils;
-    /** Wether the manager was initiated or not */
     initiated = false;
-    /** All Players stored in a MiniMap */
     players = new MiniMap();
-    /**
-     * Applies the options provided by the User
-     * @param options
-     * @returns
-     */
     applyOptions(options) {
         this.options = {
             client: {
@@ -66,15 +56,9 @@ export class LavalinkManager extends EventEmitter {
         };
         return;
     }
-    /**
-     * Validates the current manager's options
-     * @param options
-     */
     validateOptions(options) {
         if (typeof options?.sendToShard !== "function")
             throw new SyntaxError("ManagerOption.sendToShard was not provided, which is required!");
-        // only check in .init()
-        // if(typeof options?.client !== "object" || typeof options?.client.id !== "string") throw new SyntaxError("ManagerOption.client = { id: string, username?:string } was not provided, which is required");
         if (options?.autoSkip && typeof options?.autoSkip !== "boolean")
             throw new SyntaxError("ManagerOption.autoSkip must be either false | true aka boolean");
         if (options?.autoSkipOnResolveError && typeof options?.autoSkipOnResolveError !== "boolean")
@@ -83,14 +67,12 @@ export class LavalinkManager extends EventEmitter {
             throw new SyntaxError("ManagerOption.emitNewSongsOnly must be either false | true aka boolean");
         if (!options?.nodes || !Array.isArray(options?.nodes) || !options?.nodes.every((node) => this.utils.isNodeOptions(node)))
             throw new SyntaxError("ManagerOption.nodes must be an Array of NodeOptions and is required of at least 1 Node");
-        /* QUEUE STORE */
         if (options?.queueOptions?.queueStore) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueStore));
             const requiredKeys = ["get", "set", "stringify", "parse", "delete"];
             if (!requiredKeys.every((v) => keys.includes(v)) || !requiredKeys.every((v) => typeof options?.queueOptions?.queueStore[v] === "function"))
                 throw new SyntaxError(`The provided ManagerOption.QueueStore, does not have all required functions: ${requiredKeys.join(", ")}`);
         }
-        /* QUEUE WATCHER */
         if (options?.queueOptions?.queueChangesWatcher) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueChangesWatcher));
             const requiredKeys = ["tracksAdd", "tracksRemoved", "shuffled"];
@@ -100,116 +82,18 @@ export class LavalinkManager extends EventEmitter {
         if (typeof options?.queueOptions?.maxPreviousTracks !== "number" || options?.queueOptions?.maxPreviousTracks < 0)
             options.queueOptions.maxPreviousTracks = 25;
     }
-    /**
-     * Create the Lavalink Manager
-     * @param options
-     *
-     * @example
-     * ```ts
-     * //const client = new Client({...}); // create your BOT Client (e.g. via discord.js)
-     * client.lavalink = new LavalinkManager({
-     *   nodes: [
-     *     {
-     *       authorization: "yourverystrongpassword",
-     *       host: "localhost",
-     *       port: 2333,
-     *       id: "testnode"
-     *     },
-     *     sendToShard(guildId, payload) => client.guilds.cache.get(guildId)?.shard?.send(payload),
-     *     client: {
-     *       id: process.env.CLIENT_ID,
-     *       username: "TESTBOT"
-     *     },
-     *     // optional Options:
-     *     autoSkip: true,
-     *     playerOptions: {
-     *       applyVolumeAsFilter: false,
-     *       clientBasedPositionUpdateInterval: 150,
-     *       defaultSearchPlatform: "ytmsearch",
-     *       volumeDecrementer: 0.75,
-     *       //requesterTransformer: YourRequesterTransformerFunction,
-     *       onDisconnect: {
-     *         autoReconnect: true,
-     *         destroyPlayer: false
-     *       },
-     *       onEmptyQueue: {
-     *         destroyAfterMs: 30_000,
-     *         //autoPlayFunction: YourAutoplayFunction,
-     *       },
-     *       useUnresolvedData: true
-     *     },
-     *     queueOptions: {
-     *       maxPreviousTracks: 25,
-     *       //queueStore: yourCustomQueueStoreManagerClass,
-     *       //queueChangesWatcher: yourCustomQueueChangesWatcherClass
-     *     },
-     *     linksBlacklist: [],
-     *     linksWhitelist: [],
-     *     advancedOptions: {
-     *       debugOptions: {
-     *         noAudio: false,
-     *         playerDestroy: {
-     *           dontThrowError: false,
-     *           debugLogs: false
-     *         }
-     *       }
-     *     }
-     *   ]
-     * })
-     * ```
-     */
     constructor(options) {
         super();
         if (!options)
             throw new SyntaxError("No Manager Options Provided");
         this.utils = new ManagerUtils(this);
-        // use the validators
         this.applyOptions(options);
         this.validateOptions(this.options);
-        // create classes
         this.nodeManager = new NodeManager(this);
     }
-    /**
-     * Get a Player from Lava
-     * @param guildId The guildId of the player
-     *
-     * @example
-     * ```ts
-     * const player = client.lavalink.getPlayer(interaction.guildId);
-     * ```
-     * A quicker and easier way than doing:
-     * ```ts
-     * const player = client.lavalink.players.get(interaction.guildId);
-     * ```
-     * @returns
-     */
     getPlayer(guildId) {
         return this.players.get(guildId);
     }
-    /**
-     * Create a Music-Player. If a player exists, then it returns it before creating a new one
-     * @param options
-     * @returns
-     *
-     * @example
-     * ```ts
-     * const player = client.lavalink.createPlayer({
-     *   guildId: interaction.guildId,
-     *   voiceChannelId: interaction.member.voice.channelId,
-     *   // everything below is optional
-     *   textChannelId: interaction.channelId,
-     *   volume: 100,
-     *   selfDeaf: true,
-     *   selfMute: false,
-     *   instaUpdateFiltersFix: true,
-     *   applyVolumeAsFilter: false
-     *   //only needed if you want to autopick node by region (configured by you)
-     *   // vcRegion: interaction.member.voice.rtcRegion,
-     *   // provide a specific node
-     *   // node: client.lavalink.nodeManager.leastUsedNodes("memory")[0]
-     * });
-     * ```
-     */
     createPlayer(options) {
         const oldPlayer = this.getPlayer(options?.guildId);
         if (oldPlayer)
@@ -218,34 +102,16 @@ export class LavalinkManager extends EventEmitter {
         this.players.set(newPlayer.guildId, newPlayer);
         return newPlayer;
     }
-    /**
-     * Destroy a player with optional destroy reason and disconnect it from the voice channel
-     * @param guildId
-     * @param destroyReason
-     * @returns
-     *
-     * @example
-     * ```ts
-     * client.lavalink.destroyPlayer(interaction.guildId, "forcefully destroyed the player");
-     * // recommend to do it on the player tho: player.destroy("forcefully destroyed the player");
-     * ```
-     */
     destroyPlayer(guildId, destroyReason) {
         const oldPlayer = this.getPlayer(guildId);
         if (!oldPlayer)
             return;
         return oldPlayer.destroy(destroyReason);
     }
-    /**
-     * Delete's a player from the cache without destroying it on lavalink (only works when it's disconnected)
-     * @param guildId
-     * @returns
-     */
     deletePlayer(guildId) {
         const oldPlayer = this.getPlayer(guildId);
         if (!oldPlayer)
             return;
-        // oldPlayer.connected is operational. you could also do oldPlayer.voice?.token
         if (oldPlayer.voiceChannelId === "string" && oldPlayer.connected && !oldPlayer.get("internal_destroywithoutdisconnect")) {
             if (!this.options?.advancedOptions?.debugOptions?.playerDestroy?.dontThrowError)
                 throw new Error(`Use Player#destroy() not LavalinkManager#deletePlayer() to stop the Player ${JSON.stringify(oldPlayer.toJSON?.())}`);
@@ -254,28 +120,9 @@ export class LavalinkManager extends EventEmitter {
         }
         return this.players.delete(guildId);
     }
-    /**
-     * Checks wether the the lib is useable based on if any node is connected
-     */
     get useable() {
         return this.nodeManager.nodes.filter((v) => v.connected).size > 0;
     }
-    /**
-     * Initiates the Manager, creates all nodes and connects all of them
-     * @param clientData
-     *
-     * @example
-     *
-     * ```ts
-     * // on the bot ready event
-     * client.on("ready", () => {
-     *   client.lavalink.init({
-     *     id: client.user.id,
-     *     username: client.user.username
-     *   });
-     * });
-     * ```
-     */
     async init(clientData) {
         if (this.initiated)
             return this;
@@ -302,21 +149,6 @@ export class LavalinkManager extends EventEmitter {
             console.error("Could not connect to at least 1 Node");
         return this;
     }
-    /**
-     * Sends voice data to the Lavalink server.
-     * ! Without this the library won't work
-     * @param data
-     *
-     * @example
-     *
-     * ```ts
-     * // on the bot "raw" event
-     * client.on("raw", (d) => {
-     *   // required in order to send audio updates and register channel deletion etc.
-     *   client.lavalink.sendRawData(d)
-     * })
-     * ```
-     */
     async sendRawData(data) {
         if (!this.initiated) {
             if (this.options?.advancedOptions?.debugOptions?.noAudio === true)
@@ -328,7 +160,6 @@ export class LavalinkManager extends EventEmitter {
                 console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, no 't' in payload-data of the raw event:", data);
             return;
         }
-        // for channel Delete
         if ("CHANNEL_DELETE" === data.t) {
             const update = "d" in data ? data.d : data;
             if (!update.guild_id)
@@ -337,7 +168,6 @@ export class LavalinkManager extends EventEmitter {
             if (player && player.voiceChannelId === update.id)
                 return void player.destroy(DestroyReasons.ChannelDeleted);
         }
-        // for voice updates
         if (["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(data.t)) {
             const update = ("d" in data ? data.d : data);
             if (!update) {
@@ -378,7 +208,6 @@ export class LavalinkManager extends EventEmitter {
                     console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, Sent updatePlayer for voice token session", { voice: { token: update.token, endpoint: update.endpoint, sessionId: player.voice?.sessionId } });
                 return;
             }
-            /* voice state update */
             if (update.user_id !== this.options?.client.id) {
                 if (this.options?.advancedOptions?.debugOptions?.noAudio === true)
                     console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, voice update user is not equal to provided client id of the manageroptions#client#id", "user:", update.user_id, "manager client id:", this.options?.client.id);

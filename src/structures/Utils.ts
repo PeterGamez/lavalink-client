@@ -389,7 +389,7 @@ export class ManagerUtils {
  * @internal
  */
 export interface MiniMapConstructor {
-    new(): MiniMap<unknown, unknown>;
+    new (): MiniMap<unknown, unknown>;
     new <K, V>(entries?: ReadonlyArray<readonly [K, V]> | null): MiniMap<K, V>;
     new <K, V>(iterable: Iterable<readonly [K, V]>): MiniMap<K, V>;
     readonly prototype: MiniMap<unknown, unknown>;
@@ -607,7 +607,7 @@ export interface LavalinkPlayerVoice {
     /** The Ping to the voice server */
     ping?: number;
 }
-export interface LavalinkPlayerVoiceOptions extends Omit<LavalinkPlayerVoice, "connected" | "ping"> { }
+export interface LavalinkPlayerVoiceOptions extends Omit<LavalinkPlayerVoice, "connected" | "ping"> {}
 
 export interface FailingAddress {
     /** The failing address */

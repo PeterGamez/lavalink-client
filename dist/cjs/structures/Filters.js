@@ -1,15 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EQList = exports.audioOutputsData = exports.FilterManager = void 0;
-/**
- * The FilterManager for each player
- */
 class FilterManager {
-    /** The Equalizer bands currently applied to the Lavalink Server */
     equalizerBands = [];
-    /** Private Util for the instaFix Filters option */
     filterUpdatedState = 0;
-    /** All "Active" / "disabled" Player Filters */
     filters = {
         volume: false,
         vaporwave: false,
@@ -32,7 +26,6 @@ class FilterManager {
         },
         audioOutput: "stereo",
     };
-    /** The Filter Data sent to Lavalink, only if the filter is enabled (ofc.) */
     data = {
         lowPass: {
             smoothing: 0,
@@ -44,75 +37,43 @@ class FilterManager {
             filterWidth: 0,
         },
         timescale: {
-            speed: 1, // 0 = x
-            pitch: 1, // 0 = x
-            rate: 1, // 0 = x
+            speed: 1,
+            pitch: 1,
+            rate: 1,
         },
         rotation: {
             rotationHz: 0,
         },
         tremolo: {
-            frequency: 0, // 0 < x
-            depth: 0, // 0 < x = 1
+            frequency: 0,
+            depth: 0,
         },
         vibrato: {
-            frequency: 0, // 0 < x <= 14
-            depth: 0, // 0 < x <= 1
+            frequency: 0,
+            depth: 0,
         },
         pluginFilters: {
             "lavalink-filter-plugin": {
                 echo: {
-                    delay: 0, // in seconds
-                    decay: 0, // 0 < 1
+                    delay: 0,
+                    decay: 0,
                 },
                 reverb: {
-                    delays: [], // [0.037, 0.042, 0.048, 0.053]
-                    gains: [], // [0.84, 0.83, 0.82, 0.81]
+                    delays: [],
+                    gains: [],
                 },
             },
-            "high-pass": {
-            // Cuts off frequencies lower than the specified {cutoffFrequency}.
-            // "cutoffFrequency": 1475, // Integer, higher than zero, in Hz.
-            // "boostFactor": 1.0    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
-            },
-            "low-pass": {
-            // Cuts off frequencies higher than the specified {cutoffFrequency}.
-            // "cutoffFrequency": 284, // Integer, higher than zero, in Hz.
-            // "boostFactor": 1.24389    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
-            },
-            normalization: {
-            // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}.
-            // "maxAmplitude": 0.6327, // Float, within the range of 0.0 - 1.0. A value of 0.0 mutes the output.
-            // "adaptive": true    // false
-            },
-            echo: {
-            // Self-explanatory; provides an echo effect.
-            // "echoLength": 0.5649, // Float, higher than 0.0, in seconds (1.0 = 1 second).
-            // "decay": 0.4649       // Float, within the range of 0.0 - 1.0. A value of 1.0 means no decay, and a value of 0.0 means
-            },
+            "high-pass": {},
+            "low-pass": {},
+            normalization: {},
+            echo: {},
         },
         channelMix: exports.audioOutputsData.stereo,
-        /*distortion: {
-            sinOffset: 0,
-            sinScale: 1,
-            cosOffset: 0,
-            cosScale: 1,
-            tanOffset: 0,
-            tanScale: 1,
-            offset: 0,
-            scale: 1
-        }*/
     };
-    /** The Player assigned to this Filter Manager */
     player;
-    /** The Constructor for the FilterManager */
     constructor(player) {
-        /** Assign the player to the filter manager */
         this.player = player;
     }
-    /**
-     * Apply Player filters for lavalink filter sending data, if the filter is enabled / not
-     */
     async applyPlayerFilters() {
         const sendData = { ...this.data };
         this.checkFiltersState();
@@ -154,11 +115,7 @@ class FilterManager {
         if (sendData.equalizer.length === 0)
             delete sendData.equalizer;
         for (const key of [...Object.keys(sendData)]) {
-            // delete disabled filters
             if (key === "pluginFilters") {
-                // for(const key of [...Object.keys(sendData.pluginFilters)]) {
-                //     // if (this.player.node.info && !this.player.node.info?.plugins?.find?.(v => v.name === key)) delete sendData[key];
-                // }
             }
             else if (this.player.node.info && !this.player.node.info?.filters?.includes?.(key))
                 delete sendData[key];
@@ -175,11 +132,6 @@ class FilterManager {
             this.filterUpdatedState = 1;
         return;
     }
-    /**
-     * Checks if the filters are correctly stated (active / not-active)
-     * @param oldFilterTimescale
-     * @returns
-     */
     checkFiltersState(oldFilterTimescale) {
         this.filters.rotation = this.data.rotation.rotationHz !== 0;
         this.filters.vibrato = this.data.vibrato.frequency !== 0 || this.data.vibrato.depth !== 0;
@@ -202,9 +154,6 @@ class FilterManager {
         }
         return true;
     }
-    /**
-     * Reset all Filters
-     */
     async resetFilters() {
         this.filters.lavalinkLavaDspxPlugin.echo = false;
         this.filters.lavalinkLavaDspxPlugin.normalization = false;
@@ -221,7 +170,6 @@ class FilterManager {
         this.filters.karaoke = false;
         this.filters.volume = false;
         this.filters.audioOutput = "stereo";
-        // reset all filter datas
         for (const [key, value] of Object.entries({
             volume: 1,
             lowPass: {
@@ -234,52 +182,30 @@ class FilterManager {
                 filterWidth: 0,
             },
             timescale: {
-                speed: 1, // 0 = x
-                pitch: 1, // 0 = x
-                rate: 1, // 0 = x
+                speed: 1,
+                pitch: 1,
+                rate: 1,
             },
             pluginFilters: {
                 "lavalink-filter-plugin": {
-                    echo: {
-                    // delay: 0, // in seconds
-                    // decay: 0 // 0 < 1
-                    },
-                    reverb: {
-                    // delays: [], // [0.037, 0.042, 0.048, 0.053]
-                    // gains: [] // [0.84, 0.83, 0.82, 0.81]
-                    },
+                    echo: {},
+                    reverb: {},
                 },
-                "high-pass": {
-                // Cuts off frequencies lower than the specified {cutoffFrequency}.
-                // "cutoffFrequency": 1475, // Integer, higher than zero, in Hz.
-                // "boostFactor": 1.0    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
-                },
-                "low-pass": {
-                // Cuts off frequencies higher than the specified {cutoffFrequency}.
-                // "cutoffFrequency": 284, // Integer, higher than zero, in Hz.
-                // "boostFactor": 1.24389    // Float, higher than 0.0. This alters volume output. A value of 1.0 means no volume change.
-                },
-                normalization: {
-                // Attenuates peaking where peaks are defined as having a higher value than {maxAmplitude}.
-                // "maxAmplitude": 0.6327, // Float, within the range of 0.0 - 1.0. A value of 0.0 mutes the output.
-                // "adaptive": true    // false
-                },
-                echo: {
-                // Self-explanatory; provides an echo effect.
-                // "echoLength": 0.5649, // Float, higher than 0.0, in seconds (1.0 = 1 second).
-                // "decay": 0.4649       // Float, within the range of 0.0 - 1.0. A value of 1.0 means no decay, and a value of 0.0 means
-                },
+                "high-pass": {},
+                "low-pass": {},
+                normalization: {},
+                echo: {},
             },
             rotation: {
                 rotationHz: 0,
             },
             tremolo: {
-                frequency: 0, // 0 < x
-                depth: 0, // 0 < x = 1
+                frequency: 0,
+                depth: 0,
             },
             vibrato: {
-                frequency: 0, // 0 < x = 14
-                depth: 0, // 0 < x = 1
+                frequency: 0,
+                depth: 0,
             },
             channelMix: exports.audioOutputsData.stereo,
         })) {
@@ -288,11 +214,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters;
     }
-    /**
-     * Set the Filter Volume
-     * @param volume
-     * @returns
-     */
     async setVolume(volume) {
         if (volume < 0 || volume > 5)
             throw new SyntaxError("Volume-Filter must be between 0 and 5");
@@ -300,11 +221,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.volume;
     }
-    /**
-     * Set the AudioOutput Filter
-     * @param type
-     * @returns
-     */
     async setAudioOutput(type) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("channelMix"))
             throw new Error("Node#Info#filters does not include the 'channelMix' Filter (Node has it not enable)");
@@ -315,15 +231,9 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.audioOutput;
     }
-    /**
-     * Set custom filter.timescale#speed . This method disabled both: nightcore & vaporwave. use 1 to reset it to normal
-     * @param speed
-     * @returns
-     */
     async setSpeed(speed = 1) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("timescale"))
             throw new Error("Node#Info#filters does not include the 'timescale' Filter (Node has it not enable)");
-        // reset nightcore / vaporwave filter if enabled
         if (this.filters.nightcore || this.filters.vaporwave) {
             this.data.timescale.pitch = 1;
             this.data.timescale.speed = 1;
@@ -332,20 +242,13 @@ class FilterManager {
             this.filters.vaporwave = false;
         }
         this.data.timescale.speed = speed;
-        // check if custom filter is active / not
         this.isCustomFilterActive();
         await this.applyPlayerFilters();
         return this.filters.custom;
     }
-    /**
-     * Set custom filter.timescale#pitch . This method disabled both: nightcore & vaporwave. use 1 to reset it to normal
-     * @param speed
-     * @returns
-     */
     async setPitch(pitch = 1) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("timescale"))
             throw new Error("Node#Info#filters does not include the 'timescale' Filter (Node has it not enable)");
-        // reset nightcore / vaporwave filter if enabled
         if (this.filters.nightcore || this.filters.vaporwave) {
             this.data.timescale.pitch = 1;
             this.data.timescale.speed = 1;
@@ -354,20 +257,13 @@ class FilterManager {
             this.filters.vaporwave = false;
         }
         this.data.timescale.pitch = pitch;
-        // check if custom filter is active / not
         this.isCustomFilterActive();
         await this.applyPlayerFilters();
         return this.filters.custom;
     }
-    /**
-     * Set custom filter.timescale#rate . This method disabled both: nightcore & vaporwave. use 1 to reset it to normal
-     * @param speed
-     * @returns
-     */
     async setRate(rate = 1) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("timescale"))
             throw new Error("Node#Info#filters does not include the 'timescale' Filter (Node has it not enable)");
-        // reset nightcore / vaporwave filter if enabled
         if (this.filters.nightcore || this.filters.vaporwave) {
             this.data.timescale.pitch = 1;
             this.data.timescale.speed = 1;
@@ -376,16 +272,10 @@ class FilterManager {
             this.filters.vaporwave = false;
         }
         this.data.timescale.rate = rate;
-        // check if custom filter is active / not
         this.isCustomFilterActive();
         await this.applyPlayerFilters();
         return this.filters.custom;
     }
-    /**
-     * Enables / Disables the rotation effect, (Optional: provide your Own Data)
-     * @param rotationHz
-     * @returns
-     */
     async toggleRotation(rotationHz = 0.2) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("rotation"))
             throw new Error("Node#Info#filters does not include the 'rotation' Filter (Node has it not enable)");
@@ -393,12 +283,6 @@ class FilterManager {
         this.filters.rotation = !this.filters.rotation;
         return await this.applyPlayerFilters(), this.filters.rotation;
     }
-    /**
-     * Enables / Disables the Vibrato effect, (Optional: provide your Own Data)
-     * @param frequency
-     * @param depth
-     * @returns
-     */
     async toggleVibrato(frequency = 10, depth = 1) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("vibrato"))
             throw new Error("Node#Info#filters does not include the 'vibrato' Filter (Node has it not enable)");
@@ -408,12 +292,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.vibrato;
     }
-    /**
-     * Enables / Disables the Tremolo effect, (Optional: provide your Own Data)
-     * @param frequency
-     * @param depth
-     * @returns
-     */
     async toggleTremolo(frequency = 4, depth = 0.8) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("tremolo"))
             throw new Error("Node#Info#filters does not include the 'tremolo' Filter (Node has it not enable)");
@@ -423,11 +301,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.tremolo;
     }
-    /**
-     * Enables / Disables the LowPass effect, (Optional: provide your Own Data)
-     * @param smoothing
-     * @returns
-     */
     async toggleLowPass(smoothing = 20) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("lowPass"))
             throw new Error("Node#Info#filters does not include the 'lowPass' Filter (Node has it not enable)");
@@ -535,12 +408,6 @@ class FilterManager {
         },
     };
     lavalinkFilterPlugin = {
-        /**
-         * Enables / Disables the Echo effect, IMPORTANT! Only works with the correct Lavalink Plugin installed. (Optional: provide your Own Data)
-         * @param delay
-         * @param decay
-         * @returns
-         */
         toggleEcho: async (delay = 4, decay = 0.8) => {
             if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavalink-filter-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavalink-filter-plugin plugin");
@@ -560,12 +427,6 @@ class FilterManager {
             await this.applyPlayerFilters();
             return this.filters.lavalinkFilterPlugin.echo;
         },
-        /**
-         * Enables / Disables the Echo effect, IMPORTANT! Only works with the correct Lavalink Plugin installed. (Optional: provide your Own Data)
-         * @param delays
-         * @param gains
-         * @returns
-         */
         toggleReverb: async (delays = [0.037, 0.042, 0.048, 0.053], gains = [0.84, 0.83, 0.82, 0.81]) => {
             if (this.player.node.info && !this.player.node.info?.plugins?.find((v) => v.name === "lavalink-filter-plugin"))
                 throw new Error("Node#Info#plugins does not include the lavalink-filter-plugin plugin");
@@ -586,13 +447,6 @@ class FilterManager {
             return this.filters.lavalinkFilterPlugin.reverb;
         },
     };
-    /**
-     * Enables / Disables a Nightcore-like filter Effect. Disables/Overrides both: custom and Vaporwave Filter
-     * @param speed
-     * @param pitch
-     * @param rate
-     * @returns
-     */
     async toggleNightcore(speed = 1.289999523162842, pitch = 1.289999523162842, rate = 0.9365999523162842) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("timescale"))
             throw new Error("Node#Info#filters does not include the 'timescale' Filter (Node has it not enable)");
@@ -605,13 +459,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.nightcore;
     }
-    /**
-     * Enables / Disables a Vaporwave-like filter Effect. Disables/Overrides both: custom and nightcore Filter
-     * @param speed
-     * @param pitch
-     * @param rate
-     * @returns
-     */
     async toggleVaporwave(speed = 0.8500000238418579, pitch = 0.800000011920929, rate = 1) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("timescale"))
             throw new Error("Node#Info#filters does not include the 'timescale' Filter (Node has it not enable)");
@@ -624,14 +471,6 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.vaporwave;
     }
-    /**
-     * Enable / Disables a Karaoke like Filter Effect
-     * @param level
-     * @param monoLevel
-     * @param filterBand
-     * @param filterWidth
-     * @returns
-     */
     async toggleKaraoke(level = 1, monoLevel = 1, filterBand = 220, filterWidth = 100) {
         if (this.player.node.info && !this.player.node.info?.filters?.includes("karaoke"))
             throw new Error("Node#Info#filters does not include the 'karaoke' Filter (Node has it not enable)");
@@ -643,15 +482,10 @@ class FilterManager {
         await this.applyPlayerFilters();
         return this.filters.karaoke;
     }
-    /** Function to find out if currently there is a custom timescamle etc. filter applied */
     isCustomFilterActive() {
         this.filters.custom = !this.filters.nightcore && !this.filters.vaporwave && Object.values(this.data.timescale).some((d) => d !== 1);
         return this.filters.custom;
     }
-    /**
-     * Sets the players equalizer band on-top of the existing ones.
-     * @param bands
-     */
     async setEQ(bands) {
         if (!Array.isArray(bands))
             bands = [bands];
@@ -673,37 +507,31 @@ class FilterManager {
             this.filterUpdatedState = 1;
         return this;
     }
-    /** Clears the equalizer bands. */
     async clearEQ() {
         return this.setEQ(new Array(15).fill(0.0).map((gain, band) => ({ band, gain })));
     }
 }
 exports.FilterManager = FilterManager;
-/**  The audio Outputs Data map declaration */
 exports.audioOutputsData = {
     mono: {
-        // totalLeft: 1, totalRight: 1
-        leftToLeft: 0.5, //each channel should in total 0 | 1, 0 === off, 1 === on, 0.5+0.5 === 1
+        leftToLeft: 0.5,
         leftToRight: 0.5,
         rightToLeft: 0.5,
         rightToRight: 0.5,
     },
     stereo: {
-        // totalLeft: 1, totalRight: 1
         leftToLeft: 1,
         leftToRight: 0,
         rightToLeft: 0,
         rightToRight: 1,
     },
     left: {
-        // totalLeft: 1, totalRight: 0
         leftToLeft: 1,
         leftToRight: 0,
         rightToLeft: 1,
         rightToRight: 0,
     },
     right: {
-        // totalLeft: 0, totalRight: 1
         leftToLeft: 0,
         leftToRight: 1,
         rightToLeft: 0,
@@ -711,7 +539,6 @@ exports.audioOutputsData = {
     },
 };
 exports.EQList = {
-    /** A Bassboost Equalizer, so high it distorts the audio */
     BassboostEarrape: [
         { band: 0, gain: 0.6 * 0.375 },
         { band: 1, gain: 0.67 * 0.375 },
@@ -729,7 +556,6 @@ exports.EQList = {
         { band: 13, gain: -0.5 * 0.375 },
         { band: 14, gain: -0.75 * 0.375 },
     ],
-    /** A High and decent Bassboost Equalizer */
     BassboostHigh: [
         { band: 0, gain: 0.6 * 0.25 },
         { band: 1, gain: 0.67 * 0.25 },
@@ -747,7 +573,6 @@ exports.EQList = {
         { band: 13, gain: -0.5 * 0.25 },
         { band: 14, gain: -0.75 * 0.25 },
     ],
-    /** A decent Bassboost Equalizer */
     BassboostMedium: [
         { band: 0, gain: 0.6 * 0.1875 },
         { band: 1, gain: 0.67 * 0.1875 },
@@ -765,7 +590,6 @@ exports.EQList = {
         { band: 13, gain: -0.5 * 0.1875 },
         { band: 14, gain: -0.75 * 0.1875 },
     ],
-    /** A slight Bassboost Equalizer */
     BassboostLow: [
         { band: 0, gain: 0.6 * 0.125 },
         { band: 1, gain: 0.67 * 0.125 },
@@ -783,7 +607,6 @@ exports.EQList = {
         { band: 13, gain: -0.5 * 0.125 },
         { band: 14, gain: -0.75 * 0.125 },
     ],
-    /** Makes the Music slightly "better" */
     BetterMusic: [
         { band: 0, gain: 0.25 },
         { band: 1, gain: 0.025 },
@@ -801,7 +624,6 @@ exports.EQList = {
         { band: 13, gain: 0.125 },
         { band: 14, gain: 0.125 },
     ],
-    /** Makes the Music sound like rock music / sound rock music better */
     Rock: [
         { band: 0, gain: 0.3 },
         { band: 1, gain: 0.25 },
@@ -819,7 +641,6 @@ exports.EQList = {
         { band: 13, gain: 0.25 },
         { band: 14, gain: 0.3 },
     ],
-    /** Makes the Music sound like Classic music / sound Classic music better */
     Classic: [
         { band: 0, gain: 0.375 },
         { band: 1, gain: 0.35 },
@@ -837,7 +658,6 @@ exports.EQList = {
         { band: 13, gain: 0.25 },
         { band: 14, gain: 0.3 },
     ],
-    /** Makes the Music sound like Pop music / sound Pop music better */
     Pop: [
         { band: 0, gain: 0.2635 },
         { band: 1, gain: 0.22141 },
@@ -854,7 +674,6 @@ exports.EQList = {
         { band: 12, gain: 0.192 },
         { band: 13, gain: 0 },
     ],
-    /** Makes the Music sound like Electronic music / sound Electronic music better */
     Electronic: [
         { band: 0, gain: 0.375 },
         { band: 1, gain: 0.35 },
@@ -872,7 +691,6 @@ exports.EQList = {
         { band: 13, gain: 0.35 },
         { band: 14, gain: 0.4 },
     ],
-    /** Boosts all Bands slightly for louder and fuller sound */
     FullSound: [
         { band: 0, gain: 0.25 + 0.375 },
         { band: 1, gain: 0.25 + 0.025 },
@@ -890,7 +708,6 @@ exports.EQList = {
         { band: 13, gain: 0.25 + 0.125 },
         { band: 14, gain: 0.25 + 0.125 },
     ],
-    /** Boosts basses + lower highs for a pro gaming sound */
     Gaming: [
         { band: 0, gain: 0.35 },
         { band: 1, gain: 0.3 },

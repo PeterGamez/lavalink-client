@@ -13,11 +13,6 @@ class NodeManager extends stream_1.EventEmitter {
         if (this.LavalinkManager.options.nodes)
             this.LavalinkManager.options.nodes.forEach((node) => this.createNode(node));
     }
-    /**
-     * Disconnects all Nodes from lavalink ws sockets
-     * @param deleteAllNodes if the nodes should also be deleted from nodeManager.nodes
-     * @returns amount of disconnected Nodes
-     */
     async disconnectAll(deleteAllNodes = false) {
         if (!this.nodes.size)
             throw new Error("There are no nodes to disconnect (no nodes in the nodemanager)");
@@ -32,10 +27,6 @@ class NodeManager extends stream_1.EventEmitter {
         }
         return counter;
     }
-    /**
-     * Connects all not connected nodes
-     * @returns Amount of connected Nodes
-     */
     async connectAll() {
         if (!this.nodes.size)
             throw new Error("There are no nodes to connect (no nodes in the nodemanager)");
@@ -50,10 +41,6 @@ class NodeManager extends stream_1.EventEmitter {
         }
         return counter;
     }
-    /**
-     * Forcefully reconnects all nodes
-     * @returns amount of nodes
-     */
     async reconnectAll() {
         if (!this.nodes.size)
             throw new Error("There are no nodes to reconnect (no nodes in the nodemanager)");
@@ -77,22 +64,22 @@ class NodeManager extends stream_1.EventEmitter {
         switch (sortType) {
             case "memory":
                 {
-                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0));
                 }
                 break;
             case "cpuLavalink":
                 {
-                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0));
                 }
                 break;
             case "cpuSystem":
                 {
-                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0)); // sort after memor
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0));
                 }
                 break;
             case "calls":
                 {
-                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => a.calls - b.calls); // client sided sorting
+                    return [...this.nodes.values()].filter((node) => node.connected).sort((a, b) => a.calls - b.calls);
                 }
                 break;
             case "playingPlayers":
