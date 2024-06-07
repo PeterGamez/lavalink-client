@@ -328,6 +328,9 @@ class ManagerUtils {
         else if (source === "ytsearch" && !node.info?.sourceManagers?.includes("youtube")) {
             throw new Error("Lavalink Node has not 'youtube' enabled, which is required to have 'ytsearch' work");
         }
+        else if (source === "bcsearch" && !node.info?.sourceManagers?.includes("bandcamp")) {
+            throw new Error("Lavalink Node has not 'bandcamp' enabled, which is required to have 'bcsearch' work");
+        }
         return;
     }
 }

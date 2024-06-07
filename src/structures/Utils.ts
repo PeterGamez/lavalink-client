@@ -27,10 +27,7 @@ export type LavaSrcSearchPlatform = LavaSrcSearchPlatformBase | "ftts";
 
 export type DuncteSearchPlatform = "phsearch" | "speak" | "tts";
 
-export type LavalinkClientSearchPlatform = "bcsearch";
-export type LavalinkClientSearchPlatformResolve = "bandcamp" | "bc";
-
-export type LavalinkSearchPlatform = "ytsearch" | "ytmsearch" | "scsearch" | LavaSrcSearchPlatform | DuncteSearchPlatform | LavalinkClientSearchPlatform;
+export type LavalinkSearchPlatform = "ytsearch" | "ytmsearch" | "scsearch" | "bcsearch" | LavaSrcSearchPlatform | DuncteSearchPlatform;
 
 export type ClientCustomSearchPlatformUtils = "local" | "http" | "https" | "link" | "uri";
 
@@ -66,8 +63,9 @@ export type ClientSearchPlatform =
     | "flowerytts"
     | "flowery"
     | "flowery.tts"
-    | LavalinkClientSearchPlatformResolve
-    | LavalinkClientSearchPlatform;
+    | "bandcamp"
+    | "bc"
+    | "bcsearch";
 
 export type SearchPlatform = LavalinkSearchPlatform | ClientSearchPlatform;
 
@@ -381,6 +379,8 @@ export class ManagerUtils {
             throw new Error("Lavalink Node has not 'youtube' enabled, which is required to have 'ytmsearch' work");
         } else if (source === "ytsearch" && !node.info?.sourceManagers?.includes("youtube")) {
             throw new Error("Lavalink Node has not 'youtube' enabled, which is required to have 'ytsearch' work");
+        } else if (source === "bcsearch" && !node.info?.sourceManagers?.includes("bandcamp")) {
+            throw new Error("Lavalink Node has not 'bandcamp' enabled, which is required to have 'bcsearch' work");
         }
         return;
     }
@@ -389,7 +389,7 @@ export class ManagerUtils {
  * @internal
  */
 export interface MiniMapConstructor {
-    new (): MiniMap<unknown, unknown>;
+    new(): MiniMap<unknown, unknown>;
     new <K, V>(entries?: ReadonlyArray<readonly [K, V]> | null): MiniMap<K, V>;
     new <K, V>(iterable: Iterable<readonly [K, V]>): MiniMap<K, V>;
     readonly prototype: MiniMap<unknown, unknown>;
@@ -607,7 +607,7 @@ export interface LavalinkPlayerVoice {
     /** The Ping to the voice server */
     ping?: number;
 }
-export interface LavalinkPlayerVoiceOptions extends Omit<LavalinkPlayerVoice, "connected" | "ping"> {}
+export interface LavalinkPlayerVoiceOptions extends Omit<LavalinkPlayerVoice, "connected" | "ping"> { }
 
 export interface FailingAddress {
     /** The failing address */

@@ -1,4 +1,3 @@
-import { bandCampSearch } from "./CustomSearches/BandCampSearch";
 import { FilterManager } from "./Filters";
 import { Queue, QueueSaver } from "./Queue";
 import { queueTrackEnd } from "./Utils";
@@ -263,8 +262,6 @@ export class Player {
      */
     async search(query, requestUser) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
-        if (["bcsearch", "bandcamp"].includes(Query.source))
-            return await bandCampSearch(this, Query.query, requestUser);
         return this.node.search(Query, requestUser);
     }
     async lavaLyrics(skipTrackSource = false) {

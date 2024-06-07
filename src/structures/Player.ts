@@ -1,4 +1,3 @@
-import { bandCampSearch } from "./CustomSearches/BandCampSearch";
 import { EQBand, FilterData, FilterManager, LavalinkFilterData } from "./Filters";
 import { LavalinkManager } from "./LavalinkManager";
 import { LavalinkNode, SponsorBlockSegment } from "./Node";
@@ -390,8 +389,6 @@ export class Player {
      */
     public async search(query: SearchQuery, requestUser: unknown) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
-
-        if (["bcsearch", "bandcamp"].includes(Query.source)) return await bandCampSearch(this, Query.query, requestUser);
 
         return this.node.search(Query, requestUser);
     }

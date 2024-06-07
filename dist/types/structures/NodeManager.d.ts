@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { EventEmitter } from "stream";
 import { LavalinkManager } from "./LavalinkManager";
 import { LavalinkNode, LavalinkNodeOptions } from "./Node";

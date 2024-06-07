@@ -178,7 +178,7 @@ export declare class Player {
      * @param query Query for your data
      * @param requestUser
      */
-    search(query: SearchQuery, requestUser: unknown): Promise<import("./Utils").SearchResult | import("./Utils").UnresolvedSearchResult>;
+    search(query: SearchQuery, requestUser: unknown): Promise<import("./Utils").SearchResult>;
     lavaLyrics(skipTrackSource?: boolean): Promise<import("./Utils").LavaLyricsResponse>;
     /**
      * Pause the player

@@ -223,7 +223,7 @@ export declare class LavalinkNode {
     /**
      * Gets specific Player Information
      */
-    fetchPlayer(guildId: string): Promise<LavalinkPlayer | InvalidLavalinkRestRequest>;
+    fetchPlayer(guildId: string): Promise<InvalidLavalinkRestRequest | LavalinkPlayer>;
     /**
      * Updates the session with and enables/disables resuming and timeout
      * @param resuming Whether resuming is enabled for this session or not

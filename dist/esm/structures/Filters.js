@@ -41,29 +41,29 @@ export class FilterManager {
             filterWidth: 0,
         },
         timescale: {
-            speed: 1,
-            pitch: 1,
+            speed: 1, // 0 = x
+            pitch: 1, // 0 = x
             rate: 1, // 0 = x
         },
         rotation: {
             rotationHz: 0,
         },
         tremolo: {
-            frequency: 0,
+            frequency: 0, // 0 < x
             depth: 0, // 0 < x = 1
         },
         vibrato: {
-            frequency: 0,
+            frequency: 0, // 0 < x <= 14
             depth: 0, // 0 < x <= 1
         },
         pluginFilters: {
             "lavalink-filter-plugin": {
                 echo: {
-                    delay: 0,
+                    delay: 0, // in seconds
                     decay: 0, // 0 < 1
                 },
                 reverb: {
-                    delays: [],
+                    delays: [], // [0.037, 0.042, 0.048, 0.053]
                     gains: [], // [0.84, 0.83, 0.82, 0.81]
                 },
             },
@@ -231,8 +231,8 @@ export class FilterManager {
                 filterWidth: 0,
             },
             timescale: {
-                speed: 1,
-                pitch: 1,
+                speed: 1, // 0 = x
+                pitch: 1, // 0 = x
                 rate: 1, // 0 = x
             },
             pluginFilters: {
@@ -271,11 +271,11 @@ export class FilterManager {
                 rotationHz: 0,
             },
             tremolo: {
-                frequency: 0,
+                frequency: 0, // 0 < x
                 depth: 0, // 0 < x = 1
             },
             vibrato: {
-                frequency: 0,
+                frequency: 0, // 0 < x = 14
                 depth: 0, // 0 < x = 1
             },
             channelMix: audioOutputsData.stereo,
@@ -679,7 +679,7 @@ export class FilterManager {
 export const audioOutputsData = {
     mono: {
         // totalLeft: 1, totalRight: 1
-        leftToLeft: 0.5,
+        leftToLeft: 0.5, //each channel should in total 0 | 1, 0 === off, 1 === on, 0.5+0.5 === 1
         leftToRight: 0.5,
         rightToLeft: 0.5,
         rightToRight: 0.5,

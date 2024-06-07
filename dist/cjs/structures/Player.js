@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = exports.DestroyReasons = void 0;
-const BandCampSearch_1 = require("./CustomSearches/BandCampSearch");
 const Filters_1 = require("./Filters");
 const Queue_1 = require("./Queue");
 const Utils_1 = require("./Utils");
@@ -266,8 +265,6 @@ class Player {
      */
     async search(query, requestUser) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
-        if (["bcsearch", "bandcamp"].includes(Query.source))
-            return await (0, BandCampSearch_1.bandCampSearch)(this, Query.query, requestUser);
         return this.node.search(Query, requestUser);
     }
     async lavaLyrics(skipTrackSource = false) {

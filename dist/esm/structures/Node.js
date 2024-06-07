@@ -116,9 +116,6 @@ export class LavalinkNode {
         this.NodeManager.LavalinkManager.utils.validateQueryString(this, Query.query, Query.source);
         if (Query.source)
             this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
-        if (["bcsearch", "bandcamp"].includes(Query.source)) {
-            throw new Error("Bandcamp Search only works on the player!");
-        }
         let uri = `/loadtracks?identifier=`;
         if (/^https?:\/\//.test(Query.query) || ["http", "https", "link", "uri"].includes(Query.source)) {
             // if it's a link simply encode it
