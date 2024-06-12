@@ -96,23 +96,33 @@ export class LavalinkNode {
                 uri += encodeURIComponent(decodeURIComponent(Query.query));
         }
         const res = (await this.request(uri));
-        const resTracks = res.loadType === "playlist" ? res.data?.tracks : res.loadType === "track" ? [res.data] : res.loadType === "search" ? (Array.isArray(res.data) ? res.data : [res.data]) : [];
+        let resTracks = [];
+        if (res.loadType === "playlist")
+            resTracks = res.data?.tracks;
+        else if (res.loadType === "track")
+            resTracks = [res.data];
+        else if (res.loadType === "search")
+            resTracks = Array.isArray(res.data) ? res.data : [res.data];
+        let playlist = null;
+        if (res.loadType === "playlist")
+            playlist = {
+                name: res.data.info?.name || res.data.pluginInfo?.name || null,
+                title: res.data.info?.name || res.data.pluginInfo?.name || null,
+                author: res.data.info?.author || res.data.pluginInfo?.author || null,
+                thumbnail: res.data.info?.artworkUrl || res.data.pluginInfo?.artworkUrl || (typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? resTracks[res.data?.info?.selectedTrack]?.info?.artworkUrl || resTracks[res.data?.info?.selectedTrack]?.info?.pluginInfo?.artworkUrl : null) || null,
+                uri: res.data.info?.url || res.data.info?.uri || res.data.info?.link || res.data.pluginInfo?.url || res.data.pluginInfo?.uri || res.data.pluginInfo?.link || null,
+                selectedTrack: typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? this.NodeManager.LavalinkManager.utils.buildTrack(resTracks[res.data?.info?.selectedTrack], requestUser) : null,
+                duration: resTracks.length ? resTracks.reduce((acc, cur) => acc + (cur?.info?.length || 0), 0) : 0,
+            };
+        let tracks = [];
+        if (resTracks.length)
+            tracks = resTracks.map((t) => this.NodeManager.LavalinkManager.utils.buildTrack(t, requestUser));
         return {
             loadType: res.loadType,
             exception: res.loadType === "error" ? res.data : null,
             pluginInfo: res.pluginInfo || {},
-            playlist: res.loadType === "playlist"
-                ? {
-                    name: res.data.info?.name || res.data.pluginInfo?.name || null,
-                    title: res.data.info?.name || res.data.pluginInfo?.name || null,
-                    author: res.data.info?.author || res.data.pluginInfo?.author || null,
-                    thumbnail: res.data.info?.artworkUrl || res.data.pluginInfo?.artworkUrl || (typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? resTracks[res.data?.info?.selectedTrack]?.info?.artworkUrl || resTracks[res.data?.info?.selectedTrack]?.info?.pluginInfo?.artworkUrl : null) || null,
-                    uri: res.data.info?.url || res.data.info?.uri || res.data.info?.link || res.data.pluginInfo?.url || res.data.pluginInfo?.uri || res.data.pluginInfo?.link || null,
-                    selectedTrack: typeof res.data?.info?.selectedTrack !== "number" || res.data?.info?.selectedTrack === -1 ? null : resTracks[res.data?.info?.selectedTrack] ? this.NodeManager.LavalinkManager.utils.buildTrack(resTracks[res.data?.info?.selectedTrack], requestUser) : null,
-                    duration: resTracks.length ? resTracks.reduce((acc, cur) => acc + (cur?.info?.length || 0), 0) : 0,
-                }
-                : null,
-            tracks: (resTracks.length ? resTracks.map((t) => this.NodeManager.LavalinkManager.utils.buildTrack(t, requestUser)) : []),
+            playlist: playlist,
+            tracks: tracks,
         };
     }
     async lavaSearch(query, requestUser, throwOnEmpty = false) {
