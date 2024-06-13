@@ -61,21 +61,21 @@ export class QueueSaver {
 
 export class DefaultQueueStore implements QueueStoreManager {
     private data = new MiniMap();
-    constructor() {}
-    async get(guildId) {
+
+    async get(guildId: string) {
         return (await this.data.get(guildId)) as string;
     }
-    async set(guildId, stringifiedQueueData) {
+    async set(guildId: string, stringifiedQueueData: string) {
         return (await this.data.set(guildId, stringifiedQueueData)) as any;
     }
-    async delete(guildId) {
+    async delete(guildId: string) {
         return await this.data.delete(guildId);
     }
-    async parse(stringifiedQueueData) {
-        return stringifiedQueueData; // JSON.parse(value)
+    async parse(stringifiedQueueData: string) {
+        return stringifiedQueueData as any; // JSON.parse(value)
     }
-    async stringify(parsedQueueData) {
-        return parsedQueueData; // JSON.stringify(value);
+    async stringify(parsedQueueData: StoredQueue) {
+        return parsedQueueData as any; // JSON.stringify(value);
     }
 }
 

@@ -21,7 +21,6 @@ export class QueueSaver {
 }
 export class DefaultQueueStore {
     data = new MiniMap();
-    constructor() { }
     async get(guildId) {
         return (await this.data.get(guildId));
     }

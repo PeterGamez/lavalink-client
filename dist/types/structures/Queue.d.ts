@@ -41,12 +41,11 @@ export declare class QueueSaver {
 }
 export declare class DefaultQueueStore implements QueueStoreManager {
     private data;
-    constructor();
-    get(guildId: any): Promise<string>;
-    set(guildId: any, stringifiedQueueData: any): Promise<any>;
-    delete(guildId: any): Promise<boolean>;
-    parse(stringifiedQueueData: any): Promise<any>;
-    stringify(parsedQueueData: any): Promise<any>;
+    get(guildId: string): Promise<string>;
+    set(guildId: string, stringifiedQueueData: string): Promise<any>;
+    delete(guildId: string): Promise<boolean>;
+    parse(stringifiedQueueData: string): Promise<any>;
+    stringify(parsedQueueData: StoredQueue): Promise<any>;
 }
 export interface QueueChangesWatcher {
     /** get a Value (MUST RETURN UNPARSED!) */
