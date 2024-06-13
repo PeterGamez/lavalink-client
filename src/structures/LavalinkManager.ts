@@ -39,14 +39,14 @@ export interface ManagerPlayerOptions {
         /** Auto Pause the Player? */
         autoPause?: boolean;
     };
-    /* What the Player should do when the queue gets empty */
+    /** What the Player should do when the queue gets empty */
     onEmptyQueue?: {
         /** Get's executed onEmptyQueue -> You can do any track queue previous transformations, if you add a track to the queue -> it will play it, if not queueEnd will execute! */
         autoPlayFunction?: (player: Player, lastPlayedTrack: Track) => Promise<void>;
-        /* aut. destroy the player after x ms, if 0 it instantly destroys, don't provide to not destroy the player */
+        /** auto destroy the player after x ms, if 0 it instantly destroys, don't provide to not destroy the player */
         destroyAfterMs?: number;
     };
-    /* If to override the data from the Unresolved Track. for unresolved tracks */
+    /** If to override the data from the Unresolved Track. for unresolved tracks */
     useUnresolvedData?: boolean;
 }
 
@@ -273,14 +273,14 @@ export class LavalinkManager extends EventEmitter {
 
         if (!options?.nodes || !Array.isArray(options?.nodes) || !options?.nodes.every((node) => this.utils.isNodeOptions(node))) throw new SyntaxError("ManagerOption.nodes must be an Array of NodeOptions and is required of at least 1 Node");
 
-        /* QUEUE STORE */
+        /** QUEUE STORE */
         if (options?.queueOptions?.queueStore) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueStore));
             const requiredKeys = ["get", "set", "stringify", "parse", "delete"];
             if (!requiredKeys.every((v) => keys.includes(v)) || !requiredKeys.every((v) => typeof options?.queueOptions?.queueStore[v] === "function")) throw new SyntaxError(`The provided ManagerOption.QueueStore, does not have all required functions: ${requiredKeys.join(", ")}`);
         }
 
-        /* QUEUE WATCHER */
+        /** QUEUE WATCHER */
         if (options?.queueOptions?.queueChangesWatcher) {
             const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(options?.queueOptions?.queueChangesWatcher));
             const requiredKeys = ["tracksAdd", "tracksRemoved", "shuffled"];
@@ -565,7 +565,7 @@ export class LavalinkManager extends EventEmitter {
                 return;
             }
 
-            /* voice state update */
+            /** voice state update */
             if (update.user_id !== this.options?.client.id) {
                 if (this.options?.advancedOptions?.debugOptions?.noAudio === true) console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, voice update user is not equal to provided client id of the manageroptions#client#id", "user:", update.user_id, "manager client id:", this.options?.client.id);
                 return;
@@ -587,9 +587,8 @@ export class LavalinkManager extends EventEmitter {
                     }
                 }
                 return;
-            }
-            /** On left voice channel */
-            else {
+            } else {
+                /** On left voice channel */
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
                     return void (await player.destroy(DestroyReasons.Disconnected));
                 }

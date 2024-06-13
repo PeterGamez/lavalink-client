@@ -520,25 +520,25 @@ export type SponsorBlockSegmentEventType = "SegmentSkipped" | "SegmentsLoaded" |
 
 export interface SponsorBlockSegmentsLoaded extends PlayerEvent {
     type: "SegmentsLoaded";
-    /* The loaded segment(s) */
+    /** The loaded segment(s) */
     segments: {
-        /* The Category name */
+        /** The Category name */
         category: string;
-        /* In Milliseconds */
+        /** In Milliseconds */
         start: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         end: number;
     }[];
 }
 export interface SponsorBlockSegmentSkipped extends PlayerEvent {
     type: "SegmentSkipped";
-    /* The skipped segment*/
+    /** The skipped segment*/
     segment: {
-        /* The Category name */
+        /** The Category name */
         category: string;
-        /* In Milliseconds */
+        /** In Milliseconds */
         start: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         end: number;
     };
 }
@@ -549,11 +549,11 @@ export interface SponsorBlockChapterStarted extends PlayerEvent {
     chapter: {
         /** The Name of the Chapter */
         name: string;
-        /* In Milliseconds */
+        /** In Milliseconds */
         start: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         end: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         duration: number;
     };
 }
@@ -564,11 +564,11 @@ export interface SponsorBlockChaptersLoaded extends PlayerEvent {
     chapters: {
         /** The Name of the Chapter */
         name: string;
-        /* In Milliseconds */
+        /** In Milliseconds */
         start: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         end: number;
-        /* In Milliseconds */
+        /** In Milliseconds */
         duration: number;
     }[];
 }

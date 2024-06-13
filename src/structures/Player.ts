@@ -126,9 +126,9 @@ export class Player {
     public repeatMode: RepeatMode = "off";
     /** Player's ping */
     public ping = {
-        /* Response time for rest actions with Lavalink Server */
+        /** Response time for rest actions with Lavalink Server */
         lavalink: 0,
-        /* Latency of the Discord's Websocket Voice Server */
+        /** Latency of the Discord's Websocket Voice Server */
         ws: 0,
     };
 

@@ -211,7 +211,7 @@ export class Queue {
                     this.utils.toJSON()
                 );
             } catch (e) {
-                /*  */
+                /**  */
             }
 
         // save the queue
@@ -245,7 +245,7 @@ export class Queue {
                     this.utils.toJSON()
                 );
             } catch (e) {
-                /*  */
+                /**  */
             }
         // remove the tracks (and add the new ones)
         let spliced = TrackOrTracks ? this.tracks.splice(index, amount, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v))) : this.tracks.splice(index, amount);
@@ -256,7 +256,7 @@ export class Queue {
             try {
                 this.queueChanges.tracksRemoved(this.guildId, spliced, index, oldStored, this.utils.toJSON());
             } catch (e) {
-                /* */
+                /** */
             }
         // save the queue
         await this.utils.save();
