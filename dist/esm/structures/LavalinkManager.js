@@ -224,9 +224,11 @@ export class LavalinkManager extends EventEmitter {
                 if (this.options?.playerOptions?.onMute?.autoPause === true) {
                     if (player.paused !== update.mute) {
                         if (update.mute === true) {
+                            this.emit("playerMute", player, true);
                             await player.pause();
                         }
                         else {
+                            this.emit("playerMute", player, false);
                             await player.resume();
                         }
                     }

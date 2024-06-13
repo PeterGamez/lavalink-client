@@ -132,6 +132,11 @@ interface LavalinkManagerEvents {
      */
     playerDisconnect: (player: Player, voiceChannelId: string) => void;
     /**
+     * Emitted when a Player is muted or unmuted.
+     * @event Manager#playerMute
+     */
+    playerMute: (player: Player, mute: boolean) => void;
+    /**
      * Emitted when a Node-Socket got closed for a specific Player.
      * @event Manager#playerSocketClosed
      */
@@ -580,8 +585,10 @@ export class LavalinkManager extends EventEmitter {
                 if (this.options?.playerOptions?.onMute?.autoPause === true) {
                     if (player.paused !== update.mute) {
                         if (update.mute === true) {
+                            this.emit("playerMute", player, true);
                             await player.pause();
                         } else {
+                            this.emit("playerMute", player, false);
                             await player.resume();
                         }
                     }
