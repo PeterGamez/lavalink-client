@@ -34,7 +34,12 @@ export interface ManagerPlayerOptions {
         /** Instantly destroy player (overrides autoReconnect) | Don't provide == disable feature*/
         destroyPlayer?: boolean;
     };
-    /* What the Player should do, when the queue gets empty */
+    /** What the Player should do when the player gets server muted */
+    onMute?: {
+        /** Auto Pause the Player? */
+        autoPause?: boolean;
+    };
+    /* What the Player should do when the queue gets empty */
     onEmptyQueue?: {
         /** Get's executed onEmptyQueue -> You can do any track queue previous transformations, if you add a track to the queue -> it will play it, if not queueEnd will execute! */
         autoPlayFunction?: (player: Player, lastPlayedTrack: Track) => Promise<void>;
@@ -216,6 +221,9 @@ export class LavalinkManager extends EventEmitter {
                 onDisconnect: {
                     destroyPlayer: options?.playerOptions?.onDisconnect?.destroyPlayer ?? true,
                     autoReconnect: options?.playerOptions?.onDisconnect?.autoReconnect ?? false,
+                },
+                onMute: {
+                    autoPause: options?.playerOptions?.onMute?.autoPause ?? false,
                 },
                 onEmptyQueue: {
                     autoPlayFunction: options?.playerOptions?.onEmptyQueue?.autoPlayFunction ?? null,
@@ -563,18 +571,32 @@ export class LavalinkManager extends EventEmitter {
                 return;
             }
 
+            /** On in voice channel */
             if (update.channel_id) {
                 if (player.voiceChannelId !== update.channel_id) this.emit("playerMove", player, player.voiceChannelId, update.channel_id);
                 player.voice.sessionId = update.session_id;
                 player.voiceChannelId = update.channel_id;
-            } else {
+
+                if (this.options?.playerOptions?.onMute?.autoPause === true) {
+                    if (player.paused !== update.mute) {
+                        if (update.mute === true) {
+                            await player.pause();
+                        } else {
+                            await player.resume();
+                        }
+                    }
+                }
+                return;
+            }
+            /** On left voice channel */
+            else {
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
                     return void (await player.destroy(DestroyReasons.Disconnected));
                 }
 
                 this.emit("playerDisconnect", player, player.voiceChannelId);
 
-                if (!player.paused) await player.pause();
+                if (player.paused === false) await player.pause();
 
                 if (this.options?.playerOptions?.onDisconnect?.autoReconnect === true) {
                     try {
@@ -589,7 +611,6 @@ export class LavalinkManager extends EventEmitter {
                 player.voice = Object.assign({});
                 return;
             }
-            return;
         }
     }
 }
