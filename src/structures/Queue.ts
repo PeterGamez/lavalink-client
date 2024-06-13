@@ -7,17 +7,17 @@ export interface StoredQueue {
     tracks: Track[];
 }
 
-export interface QueueStoreManager extends Record<string, any> {
+export interface QueueStoreManager {
     /** @async get a Value (MUST RETURN UNPARSED!) */
-    get: (guildId: unknown) => Promise<unknown>;
+    get: (guildId: string) => Promise<string>;
     /** @async Set a value inside a guildId (MUST BE UNPARSED) */
-    set: (guildId: unknown, value: unknown) => Promise<unknown>;
+    set: (guildId: string, stringifiedQueueData: string) => Promise<void | string | boolean>;
     /** @async Delete a Database Value based of it's guildId */
-    delete: (guildId: unknown) => Promise<unknown>;
-    /** @async Transform the value(s) inside of the QueueStoreManager (IF YOU DON'T NEED PARSING/STRINGIFY, then just return the value) */
-    stringify: (value: unknown) => Promise<unknown>;
+    delete: (guildId: string) => Promise<void | string | boolean>;
     /** @async Parse the saved value back to the Queue (IF YOU DON'T NEED PARSING/STRINGIFY, then just return the value) */
-    parse: (value: unknown) => Promise<Partial<StoredQueue>>;
+    parse: (stringifiedQueueData: string) => Promise<StoredQueue>;
+    /** @async Transform the value(s) inside of the QueueStoreManager (IF YOU DON'T NEED PARSING/STRINGIFY, then just return the value) */
+    stringify: (parsedQueueData: StoredQueue) => Promise<string>;
 }
 
 export interface ManagerQueueOptions {
@@ -51,8 +51,8 @@ export class QueueSaver {
     async delete(guildId: string) {
         return await this._.delete(guildId);
     }
-    async set(guildId: string, value: any) {
-        return await this._.set(guildId, await this._.stringify(value));
+    async set(guildId: string, parsedQueueData: StoredQueue) {
+        return await this._.set(guildId, await this._.stringify(parsedQueueData));
     }
     async sync(guildId: string) {
         return await this.get(guildId);
@@ -63,19 +63,19 @@ export class DefaultQueueStore implements QueueStoreManager {
     private data = new MiniMap();
     constructor() {}
     async get(guildId) {
-        return await this.data.get(guildId);
+        return (await this.data.get(guildId)) as string;
     }
-    async set(guildId, stringifiedValue) {
-        return await this.data.set(guildId, stringifiedValue);
+    async set(guildId, stringifiedQueueData) {
+        return (await this.data.set(guildId, stringifiedQueueData)) as any;
     }
     async delete(guildId) {
         return await this.data.delete(guildId);
     }
-    async stringify(value) {
-        return value; // JSON.stringify(value);
+    async parse(stringifiedQueueData) {
+        return stringifiedQueueData; // JSON.parse(value)
     }
-    async parse(value) {
-        return value as Partial<StoredQueue>; // JSON.parse(value)
+    async stringify(parsedQueueData) {
+        return parsedQueueData; // JSON.stringify(value);
     }
 }
 

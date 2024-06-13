@@ -12,8 +12,8 @@ export class QueueSaver {
     async delete(guildId) {
         return await this._.delete(guildId);
     }
-    async set(guildId, value) {
-        return await this._.set(guildId, await this._.stringify(value));
+    async set(guildId, parsedQueueData) {
+        return await this._.set(guildId, await this._.stringify(parsedQueueData));
     }
     async sync(guildId) {
         return await this.get(guildId);
@@ -23,19 +23,19 @@ export class DefaultQueueStore {
     data = new MiniMap();
     constructor() { }
     async get(guildId) {
-        return await this.data.get(guildId);
+        return (await this.data.get(guildId));
     }
-    async set(guildId, stringifiedValue) {
-        return await this.data.set(guildId, stringifiedValue);
+    async set(guildId, stringifiedQueueData) {
+        return (await this.data.set(guildId, stringifiedQueueData));
     }
     async delete(guildId) {
         return await this.data.delete(guildId);
     }
-    async stringify(value) {
-        return value;
+    async parse(stringifiedQueueData) {
+        return stringifiedQueueData;
     }
-    async parse(value) {
-        return value;
+    async stringify(parsedQueueData) {
+        return parsedQueueData;
     }
 }
 export class Queue {
