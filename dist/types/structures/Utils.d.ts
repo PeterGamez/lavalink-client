@@ -210,17 +210,25 @@ export type SponsorBlockSegmentEvents = SponsorBlockSegmentSkipped | SponsorBloc
 export type SponsorBlockSegmentEventType = "SegmentSkipped" | "SegmentsLoaded" | "ChaptersLoaded" | "ChapterStarted";
 export interface SponsorBlockSegmentsLoaded extends PlayerEvent {
     type: "SegmentsLoaded";
+    /** The loaded segment(s) */
     segments: {
+        /** The Category name */
         category: string;
+        /** In Milliseconds */
         start: number;
+        /** In Milliseconds */
         end: number;
     }[];
 }
 export interface SponsorBlockSegmentSkipped extends PlayerEvent {
     type: "SegmentSkipped";
+    /** The skipped segment*/
     segment: {
+        /** The Category name */
         category: string;
+        /** In Milliseconds */
         start: number;
+        /** In Milliseconds */
         end: number;
     };
 }
@@ -230,8 +238,11 @@ export interface SponsorBlockChapterStarted extends PlayerEvent {
     chapter: {
         /** The Name of the Chapter */
         name: string;
+        /** In Milliseconds */
         start: number;
+        /** In Milliseconds */
         end: number;
+        /** In Milliseconds */
         duration: number;
     };
 }
@@ -241,8 +252,11 @@ export interface SponsorBlockChaptersLoaded extends PlayerEvent {
     chapters: {
         /** The Name of the Chapter */
         name: string;
+        /** In Milliseconds */
         start: number;
+        /** In Milliseconds */
         end: number;
+        /** In Milliseconds */
         duration: number;
     }[];
 }
@@ -393,6 +407,10 @@ export interface VoiceState {
     session_id: string;
     /** Voice Channel Id */
     channel_id: string;
+    /** Server Mute status */
+    mute: boolean;
+    /** Server Deaf status */
+    deaf: boolean;
 }
 /** The Base64 decodes tring by lavalink */
 export type Base64 = string;

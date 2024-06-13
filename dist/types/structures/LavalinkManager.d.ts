@@ -32,11 +32,19 @@ export interface ManagerPlayerOptions {
         /** Instantly destroy player (overrides autoReconnect) | Don't provide == disable feature*/
         destroyPlayer?: boolean;
     };
+    /** What the Player should do when the player gets server muted */
+    onMute?: {
+        /** Auto Pause the Player? */
+        autoPause?: boolean;
+    };
+    /** What the Player should do when the queue gets empty */
     onEmptyQueue?: {
         /** Get's executed onEmptyQueue -> You can do any track queue previous transformations, if you add a track to the queue -> it will play it, if not queueEnd will execute! */
         autoPlayFunction?: (player: Player, lastPlayedTrack: Track) => Promise<void>;
+        /** auto destroy the player after x ms, if 0 it instantly destroys, don't provide to not destroy the player */
         destroyAfterMs?: number;
     };
+    /** If to override the data from the Unresolved Track. for unresolved tracks */
     useUnresolvedData?: boolean;
 }
 export interface ManagerOptions {

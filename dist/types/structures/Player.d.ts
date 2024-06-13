@@ -109,7 +109,9 @@ export declare class Player {
     repeatMode: RepeatMode;
     /** Player's ping */
     ping: {
+        /** Response time for rest actions with Lavalink Server */
         lavalink: number;
+        /** Latency of the Discord's Websocket Voice Server */
         ws: number;
     };
     /** The Display Volume */

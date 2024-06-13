@@ -29,6 +29,9 @@ class LavalinkManager extends events_1.EventEmitter {
                     destroyPlayer: options?.playerOptions?.onDisconnect?.destroyPlayer ?? true,
                     autoReconnect: options?.playerOptions?.onDisconnect?.autoReconnect ?? false,
                 },
+                onMute: {
+                    autoPause: options?.playerOptions?.onMute?.autoPause ?? false,
+                },
                 onEmptyQueue: {
                     autoPlayFunction: options?.playerOptions?.onEmptyQueue?.autoPlayFunction ?? null,
                     destroyAfterMs: options?.playerOptions?.onEmptyQueue?.destroyAfterMs ?? undefined,
@@ -221,13 +224,24 @@ class LavalinkManager extends events_1.EventEmitter {
                     this.emit("playerMove", player, player.voiceChannelId, update.channel_id);
                 player.voice.sessionId = update.session_id;
                 player.voiceChannelId = update.channel_id;
+                if (this.options?.playerOptions?.onMute?.autoPause === true) {
+                    if (player.paused !== update.mute) {
+                        if (update.mute === true) {
+                            await player.pause();
+                        }
+                        else {
+                            await player.resume();
+                        }
+                    }
+                }
+                return;
             }
             else {
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
                     return void (await player.destroy(Player_1.DestroyReasons.Disconnected));
                 }
                 this.emit("playerDisconnect", player, player.voiceChannelId);
-                if (!player.paused)
+                if (player.paused === false)
                     await player.pause();
                 if (this.options?.playerOptions?.onDisconnect?.autoReconnect === true) {
                     try {
@@ -242,7 +256,6 @@ class LavalinkManager extends events_1.EventEmitter {
                 player.voice = Object.assign({});
                 return;
             }
-            return;
         }
     }
 }

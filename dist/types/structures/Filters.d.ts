@@ -163,6 +163,7 @@ export interface PlayerFilters {
     tremolo: boolean;
     /** if vibrato filter is enabled / not */
     vibrato: boolean;
+    /** if lowpass filter is enabled / not */
     lowPass: boolean;
     /** audio Output (default stereo, mono sounds the fullest and best for not-stereo tracks) */
     audioOutput: AudioOutputs;
