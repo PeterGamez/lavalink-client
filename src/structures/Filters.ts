@@ -8,7 +8,7 @@ export class FilterManager {
     /** The Equalizer bands currently applied to the Lavalink Server */
     public equalizerBands: EQBand[] = [];
     /** Private Util for the instaFix Filters option */
-    public filterUpdatedState: number = 0;
+    public filterUpdatedState: boolean = false;
     /** All "Active" / "disabled" Player Filters */
     public filters: PlayerFilters = {
         volume: false,
@@ -154,14 +154,17 @@ export class FilterManager {
         }
 
         const now = performance.now();
+
+        if (this.player.options.instaUpdateFiltersFix === true) this.filterUpdatedState = true;
+
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
                 filters: sendData,
             },
         });
+
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-        if (this.player.options.instaUpdateFiltersFix === true) this.filterUpdatedState = 1;
         return;
     }
 
@@ -641,6 +644,8 @@ export class FilterManager {
 
         const now = performance.now();
 
+        if (this.player.options.instaUpdateFiltersFix === true) this.filterUpdatedState = true;
+
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
@@ -649,8 +654,6 @@ export class FilterManager {
         });
 
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-
-        if (this.player.options.instaUpdateFiltersFix === true) this.filterUpdatedState = 1;
 
         return this;
     }

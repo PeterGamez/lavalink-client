@@ -5,41 +5,59 @@ import { Queue, QueueSaver } from "./Queue";
 import { Track, UnresolvedTrack } from "./Track";
 import { Base64, LavalinkPlayerVoiceOptions, LavaSearchQuery, queueTrackEnd, SearchQuery } from "./Utils";
 
-type PlayerDestroyReasons = "QueueEmpty" | "NodeDestroy" | "NodeDeleted" | "LavalinkNoVoice" | "NodeReconnectFail" | "PlayerReconnectFail" | "Disconnected" | "ChannelDeleted" | "ReconnectAllNodes" | "DisconnectAllNodes";
-export type DestroyReasonsType = PlayerDestroyReasons | string;
-
-export const DestroyReasons = {
-    QueueEmpty: "QueueEmpty",
-    NodeDestroy: "NodeDestroy",
-    NodeDeleted: "NodeDeleted",
-    LavalinkNoVoice: "LavalinkNoVoice",
-    NodeReconnectFail: "NodeReconnectFail",
-    Disconnected: "Disconnected",
-    PlayerReconnectFail: "PlayerReconnectFail",
-    ChannelDeleted: "ChannelDeleted",
-    DisconnectAllNodes: "DisconnectAllNodes",
-    ReconnectAllNodes: "ReconnectAllNodes",
-} as Record<PlayerDestroyReasons, PlayerDestroyReasons>;
+export enum DestroyReasons {
+    QueueEmpty = "QueueEmpty",
+    NodeDestroy = "NodeDestroy",
+    NodeDeleted = "NodeDeleted",
+    LavalinkNoVoice = "LavalinkNoVoice",
+    NodeReconnectFail = "NodeReconnectFail",
+    Disconnected = "Disconnected",
+    PlayerReconnectFail = "PlayerReconnectFail",
+    ChannelDeleted = "ChannelDeleted",
+    DisconnectAllNodes = "DisconnectAllNodes",
+    ReconnectAllNodes = "ReconnectAllNodes",
+}
+export type DestroyReasonsType = keyof typeof DestroyReasons | string;
 
 export interface PlayerJson {
+    /** Guild Id where the player was playing in */
     guildId: string;
+    /** Options provided to the player */
     options: PlayerOptions;
+    /** Voice Channel Id the player was playing in */
     voiceChannelId: string;
+    /** Text Channel Id the player was synced to */
     textChannelId?: string;
+    /** Position the player was at */
     position: number;
+    /** Lavalink's position the player was at */
     lastPosition: number;
+    /** Last time the position was sent from lavalink */
+    lastPositionChange: number;
+    /** Volume in % from the player (without volumeDecrementer) */
     volume: number;
+    /** Real Volume used in lavalink (with the volumeDecrementer) */
     lavalinkVolume: number;
+    /** The repeatmode from the player */
     repeatMode: RepeatMode;
+    /** Pause state */
     paused: boolean;
+    /** Wether the player was playing or not */
     playing: boolean;
+    /** When the player was created */
     createdTimeStamp?: number;
+    /** All current used fitlers Data */
     filters: FilterData;
+    /** The player's ping object */
     ping: {
+        /** Ping to the voice websocket server */
         ws: number;
+        /** Avg. calc. Ping to the lavalink server */
         lavalink: number;
     };
+    /** Equalizer Bands used in lavalink */
     equalizer: EQBand[];
+    /** The Id of the last used node */
     nodeId?: string;
 }
 
@@ -104,10 +122,15 @@ export interface PlayOptions extends LavalinkPlayOptions {
 }
 
 export interface Player {
+    /** Filter Manager per player */
     filterManager: FilterManager;
+    /** circular reference to the lavalink Manager from the Player for easier use */
     LavalinkManager: LavalinkManager;
+    /** Player options currently used, mutation doesn't affect player's state */
     options: PlayerOptions;
+    /** The lavalink node assigned the the player, don't change it manually */
     node: LavalinkNode;
+    /** The queue from the player */
     queue: Queue;
 }
 
@@ -138,7 +161,11 @@ export class Player {
     public lavalinkVolume: number = 100;
 
     /** The current Positin of the player (Calculated) */
-    public position: number = 0;
+    public get position() {
+        return this.lastPosition + (this.lastPositionChange ? Date.now() - this.lastPositionChange : 0);
+    }
+    /** The timestamp when the last position change update happened */
+    public lastPositionChange: number = null;
     /** The current Positin of the player (from Lavalink) */
     public lastPosition: number = 0;
 
@@ -239,7 +266,7 @@ export class Player {
         if (options?.clientTrack && (this.LavalinkManager.utils.isTrack(options?.clientTrack) || this.LavalinkManager.utils.isUnresolvedTrack(options.clientTrack))) {
             if (this.LavalinkManager.utils.isUnresolvedTrack(options.clientTrack)) await (options.clientTrack as UnresolvedTrack).resolve(this);
 
-            if (typeof options.track.userData === "object") options.clientTrack.userData = { ...(options?.clientTrack.userData || {}), ...(options.track.userData || {}) };
+            if ((typeof options.track?.userData === "object" || typeof options.clientTrack?.userData === "object") && options.clientTrack) options.clientTrack.userData = { ...(options?.clientTrack.userData || {}), ...(options.track?.userData || {}) };
 
             await this.queue.add(options?.clientTrack, 0);
 
@@ -248,9 +275,8 @@ export class Player {
             // handle play encoded options manually // TODO let it resolve by lavalink!
             const track = await this.node.decode.singleTrack(options.track?.encoded, options.track?.requester || this.queue?.current?.requester || this.queue.previous?.[0]?.requester || this.queue.tracks?.[0]?.requester || this.LavalinkManager.options.client);
 
-            if (typeof options.track.userData === "object") track.userData = { ...(track.userData || {}), ...(options.track.userData || {}) };
-
             if (track) {
+                if (typeof options.track?.userData === "object") track.userData = { ...(track.userData || {}), ...(options.track.userData || {}) };
                 replaced = true;
                 this.queue.add(track, 0);
                 await queueTrackEnd(this);
@@ -264,8 +290,8 @@ export class Player {
                 options?.track?.requester || this.queue?.current?.requester || this.queue.previous?.[0]?.requester || this.queue.tracks?.[0]?.requester || this.LavalinkManager.options.client
             );
 
-            if (typeof options.track.userData === "object") res.tracks[0].userData = { ...(res.tracks[0].userData || {}), ...(options.track.userData || {}) };
             if (res.tracks[0]) {
+                if (typeof options.track?.userData === "object") res.tracks[0].userData = { ...(res.tracks[0].userData || {}), ...(options.track.userData || {}) };
                 replaced = true;
                 this.queue.add(res.tracks[0], 0);
                 await queueTrackEnd(this);
@@ -279,7 +305,7 @@ export class Player {
                 // resolve the unresolved track
                 await (this.queue.current as unknown as UnresolvedTrack).resolve(this);
 
-                if (typeof options.track.userData === "object") this.queue.current.userData = { ...(this.queue.current.userData || {}), ...(options.track.userData || {}) };
+                if (typeof options.track?.userData === "object" && this.queue.current) this.queue.current.userData = { ...(this.queue.current?.userData || {}), ...(options.track?.userData || {}) };
             } catch (error) {
                 this.LavalinkManager.emit("trackError", this, this.queue.current, error);
 
@@ -366,8 +392,8 @@ export class Player {
      * @param requestUser
      * @returns
      */
-    public async lavaSearch(query: LavaSearchQuery, requestUser: unknown) {
-        return this.node.lavaSearch(query, requestUser);
+    public async lavaSearch(query: LavaSearchQuery, requestUser: unknown, throwOnEmpty: boolean = false) {
+        return this.node.lavaSearch(query, requestUser, throwOnEmpty);
     }
 
     public async setSponsorBlock(segments: SponsorBlockSegment[] = ["sponsor", "selfpromo"]) {
@@ -387,10 +413,10 @@ export class Player {
      * @param query Query for your data
      * @param requestUser
      */
-    public async search(query: SearchQuery, requestUser: unknown) {
+    async search(query: SearchQuery, requestUser: unknown, throwOnEmpty: boolean = false) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
 
-        return this.node.search(Query, requestUser);
+        return this.node.search(Query, requestUser, throwOnEmpty);
     }
 
     public async lavaLyrics(skipTrackSource = false) {
@@ -439,8 +465,7 @@ export class Player {
 
         if (position < 0 || position > this.queue.current.info.duration) position = Math.max(Math.min(position, this.queue.current.info.duration), 0);
 
-        this.position = position;
-
+        this.lastPositionChange = Date.now();
         this.lastPosition = position;
 
         const now = performance.now();
@@ -578,7 +603,7 @@ export class Player {
     /**
      * Destroy the player and disconnect from the voice channel
      */
-    public async destroy(reason?: string, disconnect: boolean = true) {
+    public async destroy(reason?: DestroyReasons | string, disconnect: boolean = true) {
         //  [disconnect -> queue destroy -> cache delete -> lavalink destroy -> event emit]
         if (this.LavalinkManager.options.advancedOptions?.debugOptions.playerDestroy.debugLog) console.log(`Lavalink-Client-Debug | PlayerDestroy [::] destroy Function, [guildId ${this.guildId}] - Destroy-Reason: ${String(reason)}`);
         if (this.get("internal_destroystatus") === true) {
@@ -648,6 +673,7 @@ export class Player {
             textChannelId: this.textChannelId,
             position: this.position,
             lastPosition: this.lastPosition,
+            lastPositionChange: this.lastPositionChange,
             volume: this.volume,
             lavalinkVolume: this.lavalinkVolume,
             repeatMode: this.repeatMode,
@@ -658,6 +684,7 @@ export class Player {
             equalizer: this.filterManager?.equalizerBands || [],
             nodeId: this.node?.id,
             ping: this.ping,
+            queue: this.queue.utils.toJSON(),
         } as PlayerJson;
     }
 }

@@ -128,7 +128,7 @@ export class Queue {
          */
         sync: async (override = true, dontSyncCurrent = true) => {
             const data = await this.QueueSaver.get(this.guildId);
-            if (!data) return console.log("No data found to sync for guildId: ", this.guildId);
+            if (!data) throw new Error(`No data found to sync for guildId: ${this.guildId}`);
             if (!dontSyncCurrent && !this.current && this.managerUtils.isTrack(data.current)) this.current = data.current;
             if (Array.isArray(data.tracks) && data?.tracks.length && data.tracks.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track))) this.tracks.splice(override ? 0 : this.tracks.length, override ? this.tracks.length : 0, ...data.tracks.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
             if (Array.isArray(data.previous) && data?.previous.length && data.previous.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track))) this.previous.splice(0, override ? this.tracks.length : 0, ...data.previous.filter((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)));
@@ -210,9 +210,7 @@ export class Queue {
                     oldStored,
                     this.utils.toJSON()
                 );
-            } catch (e) {
-                /**  */
-            }
+            } catch (e) {}
 
         // save the queue
         await this.utils.save();
@@ -244,9 +242,7 @@ export class Queue {
                     oldStored,
                     this.utils.toJSON()
                 );
-            } catch (e) {
-                /**  */
-            }
+            } catch (e) {}
         // remove the tracks (and add the new ones)
         let spliced = TrackOrTracks ? this.tracks.splice(index, amount, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v))) : this.tracks.splice(index, amount);
         // get the spliced array
@@ -255,9 +251,7 @@ export class Queue {
         if (typeof this.queueChanges?.tracksRemoved === "function")
             try {
                 this.queueChanges.tracksRemoved(this.guildId, spliced, index, oldStored, this.utils.toJSON());
-            } catch (e) {
-                /** */
-            }
+            } catch (e) {}
         // save the queue
         await this.utils.save();
         // return the things

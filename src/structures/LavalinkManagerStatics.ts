@@ -1,5 +1,6 @@
 import { ClientCustomSearchPlatformUtils, LavalinkSearchPlatform, SearchPlatform, SourcesRegex } from "./Utils";
 
+/** Default Sources Record, to allow source parsing with multiple inputs. */
 export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | ClientCustomSearchPlatformUtils> = {
     // youtubemusic
     "youtube music": "ytmsearch",
@@ -45,6 +46,7 @@ export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | Cli
     // pornhub
     pornhub: "phsearch",
     phsearch: "phsearch",
+    porn: "phsearch",
     ph: "phsearch",
     // speak PLUGIN
     speak: "speak",
@@ -53,7 +55,7 @@ export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | Cli
     flowery: "ftts",
     "flowery.tts": "ftts",
     flowerytts: "ftts",
-    // Client sided search platforms
+    // Client sided search platforms (after lavalinkv4.0.6 it will search via bcsearch on the node itself)
     bandcamp: "bcsearch",
     bc: "bcsearch",
     bcsearch: "bcsearch",
@@ -66,15 +68,16 @@ export const DefaultSources: Record<SearchPlatform, LavalinkSearchPlatform | Cli
     uri: "uri",
 };
 
+/** Lavalink Plugins definiton */
 export const LavalinkPlugins = {
     DuncteBot_Plugin: "DuncteBot-plugin",
-    GoogleCloudTTS: "tts-plugin",
     LavaSrc: "lavasrc-plugin",
+    GoogleCloudTTS: "tts-plugin",
     LavaSearch: "lavasearch-plugin",
     LavalinkFilterPlugin: "lavalink-filter-plugin",
-    YoutubeSource: "youtube-source",
 };
 
+/** Lavalink Sources regexes for url validations */
 export const SourceLinksRegexes: Record<SourcesRegex, RegExp> = {
     /** DEFAULT SUPPORTED BY LAVALINK */
     YoutubeRegex: /https?:\/\/?(?:www\.)?(?:(m|www)\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts|playlist\?|watch\?v=|watch\?.+(?:&|&#38;);v=))([a-zA-Z0-9\-_]{11})?(?:(?:\?|&|&#38;)index=((?:\d){1,3}))?(?:(?:\?|&|&#38;)?list=([a-zA-Z\-_0-9]{34}))?(?:\S+)?/,

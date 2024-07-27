@@ -7,6 +7,7 @@ import { DefaultQueueStore, ManagerQueueOptions } from "./Queue";
 import { Track, UnresolvedTrack } from "./Track";
 import { ChannelDeletePacket, GuildShardPayload, ManagerUtils, MiniMap, SearchPlatform, SponsorBlockChaptersLoaded, SponsorBlockChapterStarted, SponsorBlockSegmentSkipped, SponsorBlockSegmentsLoaded, TrackEndEvent, TrackExceptionEvent, TrackStartEvent, TrackStuckEvent, VoicePacket, VoiceServer, VoiceState, WebSocketClosedEvent } from "./Utils";
 
+/** How the botclient is allowed to be structured */
 export interface BotClientOptions {
     /** Bot Client Id */
     id: string;
@@ -16,6 +17,7 @@ export interface BotClientOptions {
     [x: string | number | symbol]: unknown;
 }
 
+/** Sub Manager Options, for player specific things */
 export interface ManagerPlayerOptions {
     /** If the Lavalink Volume should be decremented by x number */
     volumeDecrementer?: number;
@@ -50,6 +52,7 @@ export interface ManagerPlayerOptions {
     useUnresolvedData?: boolean;
 }
 
+/** Manager Options used to create the manager */
 export interface ManagerOptions {
     /** The Node Options, for all Nodes! (on init) */
     nodes: LavalinkNodeOptions[];
@@ -75,8 +78,12 @@ export interface ManagerOptions {
     linksAllowed?: boolean;
     /** Advanced Options for the Library, which may or may not be "library breaking" */
     advancedOptions?: {
+        /** Max duration for that the filter fix duration works (in ms) - default is 8mins */
+        maxFilterFixDuration?: number;
         /** optional */
         debugOptions?: {
+            /** For logging custom searches */
+            logCustomSearches?: boolean;
             /** logs for debugging the "no-Audio" playing error */
             noAudio?: boolean;
             /** For Logging the Destroy function */
@@ -90,7 +97,7 @@ export interface ManagerOptions {
     };
 }
 
-interface LavalinkManagerEvents {
+export interface LavalinkManagerEvents {
     /**
      * Emitted when a Track started playing.
      * @event Manager#trackStart
@@ -105,12 +112,12 @@ interface LavalinkManagerEvents {
      * Emitted when a Track got stuck while playing.
      * @event Manager#trackStuck
      */
-    trackStuck: (player: Player, track: Track, payload: TrackStuckEvent) => void;
+    trackStuck: (player: Player, track: Track | null, payload: TrackStuckEvent) => void;
     /**
      * Emitted when a Track errored.
      * @event Manager#trackError
      */
-    trackError: (player: Player, track: Track | UnresolvedTrack, payload: TrackExceptionEvent) => void;
+    trackError: (player: Player, track: Track | UnresolvedTrack | null, payload: TrackExceptionEvent) => void;
     /**
      * Emitted when the Playing finished and no more tracks in the queue.
      * @event Manager#queueEnd
@@ -249,7 +256,9 @@ export class LavalinkManager extends EventEmitter {
                 queueStore: options?.queueOptions?.queueStore ?? new DefaultQueueStore(),
             },
             advancedOptions: {
+                maxFilterFixDuration: options?.advancedOptions?.maxFilterFixDuration ?? 600_000,
                 debugOptions: {
+                    logCustomSearches: options?.advancedOptions?.debugOptions?.logCustomSearches ?? false,
                     noAudio: options?.advancedOptions?.debugOptions?.noAudio ?? false,
                     playerDestroy: {
                         dontThrowError: options?.advancedOptions?.debugOptions?.playerDestroy?.dontThrowError ?? false,
@@ -327,6 +336,9 @@ export class LavalinkManager extends EventEmitter {
      *         autoReconnect: true,
      *         destroyPlayer: false
      *       },
+     *       onMute: {
+     *          autoPause: options?.playerOptions?.onMute?.autoPause ?? false,
+     *       },
      *       onEmptyQueue: {
      *         destroyAfterMs: 30_000,
      *         //autoPlayFunction: YourAutoplayFunction,
@@ -341,6 +353,7 @@ export class LavalinkManager extends EventEmitter {
      *     linksBlacklist: [],
      *     linksWhitelist: [],
      *     advancedOptions: {
+     *       maxFilterFixDuration: 600_000,
      *       debugOptions: {
      *         noAudio: false,
      *         playerDestroy: {
@@ -440,6 +453,12 @@ export class LavalinkManager extends EventEmitter {
      * Delete's a player from the cache without destroying it on lavalink (only works when it's disconnected)
      * @param guildId
      * @returns
+     *
+     * @example
+     * ```ts
+     * client.lavalink.deletePlayer(interaction.guildId);
+     * // shouldn't be used except you know what you are doing.
+     * ```
      */
     public deletePlayer(guildId: string) {
         const oldPlayer = this.getPlayer(guildId);
@@ -454,6 +473,12 @@ export class LavalinkManager extends EventEmitter {
 
     /**
      * Checks wether the the lib is useable based on if any node is connected
+     *
+     * @example
+     * ```ts
+     * if(!client.lavalink.useable) return console.error("can'T search yet, because there is no useable lavalink node.")
+     * // continue with code e.g. createing a player and searching
+     * ```
      */
     public get useable() {
         return this.nodeManager.nodes.filter((v) => v.connected).size > 0;
@@ -464,7 +489,6 @@ export class LavalinkManager extends EventEmitter {
      * @param clientData
      *
      * @example
-     *
      * ```ts
      * // on the bot ready event
      * client.on("ready", () => {
@@ -540,7 +564,7 @@ export class LavalinkManager extends EventEmitter {
                 return;
             }
             if (!("token" in update) && !("session_id" in update)) {
-                if (this.options?.advancedOptions?.debugOptions?.noAudio === true) console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, no 'token' nor 'session_id' found in payload:", data);
+                if (this.options?.advancedOptions?.debugOptions?.noAudio === true) console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, no 'token' or 'session_id' found in payload:", data);
                 return;
             }
 
@@ -593,7 +617,6 @@ export class LavalinkManager extends EventEmitter {
                         }
                     }
                 }
-                return;
             } else {
                 /** On left voice channel */
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
@@ -615,7 +638,6 @@ export class LavalinkManager extends EventEmitter {
 
                 player.voiceChannelId = null;
                 player.voice = Object.assign({});
-                return;
             }
         }
     }
