@@ -633,7 +633,9 @@ export class LavalinkManager extends EventEmitter {
                     } catch {
                         return void (await player.destroy(DestroyReasons.PlayerReconnectFail));
                     }
-                    return void player.paused && (await player.resume());
+                    if (player.paused) {
+                        return void (await player.pause());
+                    }
                 }
 
                 player.voiceChannelId = null;
