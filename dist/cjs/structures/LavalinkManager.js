@@ -51,7 +51,9 @@ class LavalinkManager extends events_1.EventEmitter {
                 queueStore: options?.queueOptions?.queueStore ?? new Queue_1.DefaultQueueStore(),
             },
             advancedOptions: {
+                maxFilterFixDuration: options?.advancedOptions?.maxFilterFixDuration ?? 600000,
                 debugOptions: {
+                    logCustomSearches: options?.advancedOptions?.debugOptions?.logCustomSearches ?? false,
                     noAudio: options?.advancedOptions?.debugOptions?.noAudio ?? false,
                     playerDestroy: {
                         dontThrowError: options?.advancedOptions?.debugOptions?.playerDestroy?.dontThrowError ?? false,
@@ -183,7 +185,7 @@ class LavalinkManager extends events_1.EventEmitter {
             }
             if (!("token" in update) && !("session_id" in update)) {
                 if (this.options?.advancedOptions?.debugOptions?.noAudio === true)
-                    console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, no 'token' nor 'session_id' found in payload:", data);
+                    console.debug("Lavalink-Client-Debug | NO-AUDIO [::] sendRawData function, no 'token' or 'session_id' found in payload:", data);
                 return;
             }
             const player = this.getPlayer(update.guild_id);
@@ -236,7 +238,6 @@ class LavalinkManager extends events_1.EventEmitter {
                         }
                     }
                 }
-                return;
             }
             else {
                 if (this.options?.playerOptions?.onDisconnect?.destroyPlayer === true) {
@@ -252,11 +253,12 @@ class LavalinkManager extends events_1.EventEmitter {
                     catch {
                         return void (await player.destroy(Player_1.DestroyReasons.PlayerReconnectFail));
                     }
-                    return void player.paused && (await player.resume());
+                    if (player.paused) {
+                        return void (await player.pause());
+                    }
                 }
                 player.voiceChannelId = null;
                 player.voice = Object.assign({});
-                return;
             }
         }
     }

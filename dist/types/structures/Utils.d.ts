@@ -12,12 +12,14 @@ type Opaque<T, K> = T & {
 };
 export type IntegerNumber = Opaque<number, "Int">;
 export type FloatNumber = Opaque<number, "Float">;
-export type LavaSrcSearchPlatformBase = "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "ymsearch" | "phsearch";
+export type LavaSrcSearchPlatformBase = "spsearch" | "sprec" | "amsearch" | "dzsearch" | "dzisrc" | "ymsearch";
 export type LavaSrcSearchPlatform = LavaSrcSearchPlatformBase | "ftts";
-export type DuncteSearchPlatform = "phsearch" | "speak" | "tts";
-export type LavalinkSearchPlatform = "ytsearch" | "ytmsearch" | "scsearch" | "bcsearch" | LavaSrcSearchPlatform | DuncteSearchPlatform;
+export type DuncteSearchPlatform = "speak" | "phsearch" | "pornhub" | "porn" | "ph" | "tts";
+export type LavalinkClientSearchPlatform = "bcsearch";
+export type LavalinkClientSearchPlatformResolve = "bandcamp" | "bc";
+export type LavalinkSearchPlatform = "ytsearch" | "ytmsearch" | "scsearch" | "bcsearch" | LavaSrcSearchPlatform | DuncteSearchPlatform | LavalinkClientSearchPlatform;
 export type ClientCustomSearchPlatformUtils = "local" | "http" | "https" | "link" | "uri";
-export type ClientSearchPlatform = ClientCustomSearchPlatformUtils | "youtube" | "yt" | "youtube music" | "youtubemusic" | "ytm" | "musicyoutube" | "music youtube" | "soundcloud" | "sc" | "am" | "apple music" | "applemusic" | "apple" | "musicapple" | "music apple" | "sp" | "spsuggestion" | "spotify" | "spotify.com" | "spotifycom" | "dz" | "deezer" | "yandex" | "yandex music" | "yandexmusic" | "pornhub" | "ph" | "flowerytts" | "flowery" | "flowery.tts" | "bandcamp" | "bc" | "bcsearch";
+export type ClientSearchPlatform = ClientCustomSearchPlatformUtils | "youtube" | "yt" | "youtube music" | "youtubemusic" | "ytm" | "musicyoutube" | "music youtube" | "soundcloud" | "sc" | "am" | "apple music" | "applemusic" | "apple" | "musicapple" | "music apple" | "sp" | "spsuggestion" | "spotify" | "spotify.com" | "spotifycom" | "dz" | "deezer" | "yandex" | "yandex music" | "yandexmusic" | "flowerytts" | "flowery" | "flowery.tts" | LavalinkClientSearchPlatformResolve | LavalinkClientSearchPlatform;
 export type SearchPlatform = LavalinkSearchPlatform | ClientSearchPlatform;
 export type SourcesRegex = "YoutubeRegex" | "YoutubeMusicRegex" | "SoundCloudRegex" | "SoundCloudMobileRegex" | "DeezerTrackRegex" | "DeezerArtistRegex" | "DeezerEpisodeRegex" | "DeezerMixesRegex" | "DeezerPageLinkRegex" | "DeezerPlaylistRegex" | "DeezerAlbumRegex" | "AllDeezerRegex" | "AllDeezerRegexWithoutPageLink" | "SpotifySongRegex" | "SpotifyPlaylistRegex" | "SpotifyArtistRegex" | "SpotifyEpisodeRegex" | "SpotifyShowRegex" | "SpotifyAlbumRegex" | "AllSpotifyRegex" | "mp3Url" | "m3uUrl" | "m3u8Url" | "mp4Url" | "m4aUrl" | "wavUrl" | "aacpUrl" | "tiktok" | "mixcloud" | "musicYandex" | "pornhub" | "radiohost" | "bandcamp" | "appleMusic" | "TwitchTv" | "vimeo";
 export interface PlaylistInfo {
@@ -102,6 +104,7 @@ export declare class ManagerUtils {
     validateQueryString(node: LavalinkNode, queryString: string, sourceString?: LavalinkSearchPlatform): void;
     transformQuery(query: SearchQuery): {
         query: string;
+        extraQueryUrlParams: URLSearchParams;
         source: any;
     };
     transformLavaSearchQuery(query: LavaSearchQuery): {
@@ -481,6 +484,8 @@ interface LyricsLine {
 type SearchQuerys = {
     /** lavalink search Query / identifier string */
     query: string;
+    /** Extra url query params to use, e.g. for flowertts */
+    extraQueryUrlParams?: URLSearchParams;
     /** Source to append to the search query string */
     source?: SearchPlatform;
 };

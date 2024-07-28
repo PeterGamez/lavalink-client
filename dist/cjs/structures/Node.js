@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LavalinkNode = exports.validSponsorBlocks = void 0;
 const tslib_1 = require("tslib");
 const path_1 = require("path");
-const undici_1 = require("undici");
 const ws_1 = tslib_1.__importDefault(require("ws"));
 const Player_1 = require("./Player");
 const Utils_1 = require("./Utils");
@@ -39,23 +38,36 @@ class LavalinkNode {
     reconnectTimeout = undefined;
     reconnectAttempts = 1;
     socket = null;
-    rest;
     version = "v4";
     constructor(options, manager) {
         this.options = {
             secure: false,
             retryAmount: 5,
             retryDelay: 30e3,
-            requestTimeout: 10e3,
+            requestSignalTimeoutMS: 10000,
             ...options,
         };
         this.NodeManager = manager;
         this.validate();
         if (this.options.secure && this.options.port !== 443)
             throw new SyntaxError("If secure is true, then the port must be 443");
-        this.rest = new undici_1.Pool(this.poolAddress, this.options.poolOptions);
         this.options.regions = (this.options.regions || []).map((a) => a.toLowerCase());
         Object.defineProperty(this, Utils_1.NodeSymbol, { configurable: true, value: true });
+    }
+    getRequestingUrl(url, extraQueryUrlParams) {
+        if (!url.searchParams.size)
+            return `${url.origin}${url.pathname}`;
+        const keysToAdd = [];
+        for (const [paramKey, paramValue] of url.searchParams.entries()) {
+            const decoded = decodeURIComponent(paramValue).trim();
+            if (decoded.includes("://") && !/^https?:\/\//.test(decoded)) {
+                const [key, ...values] = decoded.split("://");
+                keysToAdd.push(`${paramKey}=${encodeURI(`${key}://${encodeURIComponent(values.join("://"))}${extraQueryUrlParams && extraQueryUrlParams?.size > 0 ? `?${extraQueryUrlParams.toString()}` : ""}`)}`);
+                continue;
+            }
+            keysToAdd.push(`${paramKey}=${encodeURIComponent(decoded)}`);
+        }
+        return `${url.origin}${url.pathname}?${keysToAdd.join("&")}`;
     }
     async rawRequest(endpoint, modify) {
         const options = {
@@ -64,13 +76,15 @@ class LavalinkNode {
             headers: {
                 Authorization: this.options.authorization,
             },
-            headersTimeout: this.options.requestTimeout,
+            signal: this.options.requestSignalTimeoutMS && this.options.requestSignalTimeoutMS > 0 ? AbortSignal.timeout(this.options.requestSignalTimeoutMS) : undefined,
         };
         modify?.(options);
-        const url = new URL(`${this.poolAddress}${options.path}`);
+        const url = new URL(`${this.restAddress}${options.path}`);
         url.searchParams.append("trace", "true");
-        options.path = url.pathname + url.search;
-        const request = await this.rest.request(options);
+        const urlToUse = this.getRequestingUrl(url, options?.extraQueryUrlParams);
+        delete options.path;
+        delete options.extraQueryUrlParams;
+        const request = await fetch(urlToUse, options);
         this.calls++;
         return { request, options };
     }
@@ -78,28 +92,32 @@ class LavalinkNode {
         const { request, options } = await this.rawRequest(endpoint, modify);
         if (["DELETE", "PUT"].includes(options.method))
             return;
-        if (request.statusCode === 404)
+        if (request.status === 404)
             throw new Error(`Node Request resulted into an error, request-PATH: ${options.path} | headers: ${JSON.stringify(request.headers)}`);
-        return parseAsText ? await request.body.text() : await request.body.json();
+        return parseAsText ? await request.text() : await request.json();
     }
-    async search(query, requestUser) {
+    async search(query, requestUser, throwOnEmpty = false) {
         const Query = this.NodeManager.LavalinkManager.utils.transformQuery(query);
         this.NodeManager.LavalinkManager.utils.validateQueryString(this, Query.query, Query.source);
         if (Query.source)
             this.NodeManager.LavalinkManager.utils.validateSourceString(this, Query.source);
         let uri = `/loadtracks?identifier=`;
         if (/^https?:\/\//.test(Query.query) || ["http", "https", "link", "uri"].includes(Query.source)) {
-            uri += encodeURIComponent(decodeURIComponent(Query.query));
+            uri += encodeURIComponent(Query.query);
         }
         else {
             if (Query.source !== "local")
                 uri += `${Query.source}:`;
             if (Query.source === "ftts")
-                uri += `//${encodeURIComponent(encodeURI(decodeURIComponent(Query.query)))}`;
+                uri += `//${encodeURIComponent(Query.query)}`;
             else
-                uri += encodeURIComponent(decodeURIComponent(Query.query));
+                uri += encodeURIComponent(Query.query);
         }
-        const res = (await this.request(uri));
+        const res = (await this.request(uri, (options) => {
+            if (typeof query === "object" && typeof query.extraQueryUrlParams?.size === "number" && query.extraQueryUrlParams?.size > 0) {
+                options.extraQueryUrlParams = query.extraQueryUrlParams;
+            }
+        }));
         let resTracks = [];
         if (res.loadType === "playlist")
             resTracks = res.data?.tracks;
@@ -107,6 +125,8 @@ class LavalinkNode {
             resTracks = [res.data];
         else if (res.loadType === "search")
             resTracks = Array.isArray(res.data) ? res.data : [res.data];
+        if (throwOnEmpty === true && (res.loadType === "empty" || !resTracks.length))
+            throw new Error("Nothing found");
         let playlist = null;
         if (res.loadType === "playlist")
             playlist = {
@@ -142,9 +162,9 @@ class LavalinkNode {
         if (!this.info.plugins.find((v) => v.name === "lavasrc-plugin"))
             throw new RangeError(`there is no lavasrc-plugin available in the lavalink node: ${this.id}`);
         const { request } = await this.rawRequest(`/loadsearch?query=${Query.source ? `${Query.source}:` : ""}${encodeURIComponent(Query.query)}${Query.types?.length ? `&types=${Query.types.join(",")}` : ""}`);
-        if (throwOnEmpty === true)
+        const res = (request.status === 204 ? {} : await request.json());
+        if (throwOnEmpty === true && !Object.entries(res).flat().filter(Boolean).length)
             throw new Error("Nothing found");
-        const res = (request.statusCode === 204 ? {} : await request.body.json());
         return {
             tracks: res.tracks?.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) || [],
             albums: res.albums?.map((v) => ({ info: v.info, pluginInfo: v?.plugin || v.pluginInfo, tracks: v.tracks.map((v) => this.NodeManager.LavalinkManager.utils.buildTrack(v, requestUser)) })) || [],
@@ -160,7 +180,7 @@ class LavalinkNode {
         if (!this.info.plugins.find((v) => v.name === "lavalyrics-plugin"))
             throw new RangeError(`there is no lavalyrics-plugin available in the lavalink node: ${this.id}`);
         const { request } = await this.rawRequest(`/lyrics?track=${encodeURI(encodedTrack)}&skipTrackSource=${skipTrackSource}`);
-        const res = (request.statusCode === 204 ? {} : await request.body.json());
+        const res = (request.status === 204 ? {} : await request.json());
         return {
             sourceName: res.sourceName || null,
             provider: res.provider || null,
@@ -178,7 +198,7 @@ class LavalinkNode {
             r.headers["Content-Type"] = "application/json";
             r.body = JSON.stringify(data.playerOptions);
             if (data.noReplace) {
-                const url = new URL(`${this.poolAddress}${r.path}`);
+                const url = new URL(`${this.restAddress}${r.path}`);
                 url.searchParams.append("noReplace", data.noReplace === true && typeof data.noReplace === "boolean" ? "true" : "false");
                 r.path = url.pathname + url.search;
             }
@@ -255,6 +275,11 @@ class LavalinkNode {
             return false;
         return this.socket.readyState === ws_1.default.OPEN;
     }
+    get connectionStatus() {
+        if (!this.socket)
+            throw new Error("no websocket was initialized yet");
+        return ["CONNECTING", "OPEN", "CLOSING", "CLOSED"][this.socket.readyState] || "UNKNOWN";
+    }
     async fetchAllPlayers() {
         if (!this.sessionId)
             throw new Error("The Lavalink-Node is either not ready, or not up to date!");
@@ -291,7 +316,7 @@ class LavalinkNode {
         singleTrack: async (encoded, requester) => {
             if (!encoded)
                 throw new SyntaxError("No encoded (Base64 string) was provided");
-            return this.NodeManager.LavalinkManager.utils.buildTrack((await this.request(`/decodetrack?encodedTrack=${encoded}`)), requester);
+            return this.NodeManager.LavalinkManager.utils?.buildTrack((await this.request(`/decodetrack?encodedTrack=${encodeURIComponent(encoded.replace(/\s/g, ""))}`)), requester);
         },
         multipleTracks: async (encodeds, requester) => {
             if (!Array.isArray(encodeds) || !encodeds.every((v) => typeof v === "string" && v.length > 1))
@@ -356,8 +381,8 @@ class LavalinkNode {
                 player.playing = !data.playerOptions.paused;
             }
             if (typeof data.playerOptions.position === "number") {
-                player.position = data.playerOptions.position;
                 player.lastPosition = data.playerOptions.position;
+                player.lastPositionChange = Date.now();
             }
             if (typeof data.playerOptions.voice !== "undefined")
                 player.voice = data.playerOptions.voice;
@@ -407,7 +432,7 @@ class LavalinkNode {
         }
         return true;
     }
-    get poolAddress() {
+    get restAddress() {
         return `http${this.options.secure ? "s" : ""}://${this.options.host}:${this.options.port}`;
     }
     reconnect(instaReconnect = false) {
@@ -441,9 +466,9 @@ class LavalinkNode {
         if (this.reconnectTimeout)
             clearTimeout(this.reconnectTimeout);
         this.reconnectAttempts = 1;
-        this.info = await this.fetchInfo().catch(() => null);
+        this.info = await this.fetchInfo().catch((e) => (console.error(e, "ON-OPEN-FETCH"), null));
         if (!this.info && ["v3", "v4"].includes(this.version)) {
-            const errorString = `Lavalink Node (${this.poolAddress}) does not provide any /${this.version}/info`;
+            const errorString = `Lavalink Node (${this.restAddress}) does not provide any /${this.version}/info`;
             throw new Error(errorString);
         }
         this.NodeManager.emit("connect", this);
@@ -478,41 +503,15 @@ class LavalinkNode {
                     if (!player)
                         return;
                     const oldPlayer = player?.toJSON();
-                    if (player.get("internal_updateInterval"))
-                        clearInterval(player.get("internal_updateInterval"));
-                    player.position = payload.state.position || 0;
+                    player.lastPositionChange = Date.now();
                     player.lastPosition = payload.state.position || 0;
                     player.connected = payload.state.connected;
                     player.ping.ws = payload.state.ping >= 0 ? payload.state.ping : player.ping.ws <= 0 && player.connected ? null : player.ping.ws || 0;
                     if (!player.createdTimeStamp && payload.state.time)
                         player.createdTimeStamp = payload.state.time;
-                    if (typeof this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval === "number" && this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval >= 10) {
-                        player.set("internal_updateInterval", setInterval(() => {
-                            player.position += this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250;
-                            if (player.filterManager.filterUpdatedState >= 1) {
-                                player.filterManager.filterUpdatedState++;
-                                const maxMins = 8;
-                                const currentDuration = player.queue.current?.info?.duration || 0;
-                                if (currentDuration <= maxMins * 6e4 || (0, path_1.isAbsolute)(player.queue.current?.info?.uri)) {
-                                    if (player.filterManager.filterUpdatedState >= ((this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250) > 400 ? 2 : 3)) {
-                                        player.filterManager.filterUpdatedState = 0;
-                                        player.seek(player.position);
-                                    }
-                                }
-                                else {
-                                    player.filterManager.filterUpdatedState = 0;
-                                }
-                            }
-                        }, this.NodeManager.LavalinkManager.options.playerOptions.clientBasedPositionUpdateInterval || 250));
-                    }
-                    else {
-                        if (player.filterManager.filterUpdatedState >= 1) {
-                            const maxMins = 8;
-                            const currentDuration = player.queue.current?.info?.duration || 0;
-                            if (currentDuration <= maxMins * 6e4 || (0, path_1.isAbsolute)(player.queue.current?.info?.uri))
-                                player.seek(player.position);
-                            player.filterManager.filterUpdatedState = 0;
-                        }
+                    if (player.filterManager.filterUpdatedState === true && ((player.queue.current?.info?.duration || 0) <= (player.LavalinkManager.options.advancedOptions.maxFilterFixDuration || 600000) || (0, path_1.isAbsolute)(player.queue.current?.info?.uri))) {
+                        player.filterManager.filterUpdatedState = false;
+                        await player.seek(player.position);
                     }
                     this.NodeManager.LavalinkManager.emit("playerUpdate", oldPlayer, player);
                 }
@@ -558,7 +557,7 @@ class LavalinkNode {
                 this.SponsorBlockSegmentLoaded(player, player.queue.current, payload);
                 break;
             case "SegmentSkipped":
-                this.SponsorBlockSegmentkipped(player, player.queue.current, payload);
+                this.SponsorBlockSegmentSkipped(player, player.queue.current, payload);
                 break;
             case "ChaptersLoaded":
                 this.SponsorBlockChaptersLoaded(player, player.queue.current, payload);
@@ -630,7 +629,7 @@ class LavalinkNode {
     SponsorBlockSegmentLoaded(player, track, payload) {
         return this.NodeManager.LavalinkManager.emit("SegmentsLoaded", player, track, payload);
     }
-    SponsorBlockSegmentkipped(player, track, payload) {
+    SponsorBlockSegmentSkipped(player, track, payload) {
         return this.NodeManager.LavalinkManager.emit("SegmentSkipped", player, track, payload);
     }
     SponsorBlockChaptersLoaded(player, track, payload) {

@@ -1,6 +1,6 @@
 export class FilterManager {
     equalizerBands = [];
-    filterUpdatedState = 0;
+    filterUpdatedState = false;
     filters = {
         volume: false,
         vaporwave: false,
@@ -118,6 +118,8 @@ export class FilterManager {
                 delete sendData[key];
         }
         const now = performance.now();
+        if (this.player.options.instaUpdateFiltersFix === true)
+            this.filterUpdatedState = true;
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
@@ -125,8 +127,6 @@ export class FilterManager {
             },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-        if (this.player.options.instaUpdateFiltersFix === true)
-            this.filterUpdatedState = 1;
         return;
     }
     checkFiltersState(oldFilterTimescale) {
@@ -493,6 +493,8 @@ export class FilterManager {
         if (!this.player.node.sessionId)
             throw new Error("The Lavalink-Node is either not ready or not up to date");
         const now = performance.now();
+        if (this.player.options.instaUpdateFiltersFix === true)
+            this.filterUpdatedState = true;
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
@@ -500,8 +502,6 @@ export class FilterManager {
             },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-        if (this.player.options.instaUpdateFiltersFix === true)
-            this.filterUpdatedState = 1;
         return this;
     }
     async clearEQ() {
