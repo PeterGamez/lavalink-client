@@ -59,10 +59,12 @@ export interface NodeManagerEvents {
 }
 
 export declare interface NodeManager {
+    /** @private */
     on<U extends keyof NodeManagerEvents>(event: U, listener: NodeManagerEvents[U]): this;
-
+    /** @private */
     emit<U extends keyof NodeManagerEvents>(event: U, ...args: Parameters<NodeManagerEvents[U]>): boolean;
-
+    /** @private */
+    removeAllListeners(event?: keyof NodeManagerEvents): this;
     /** @private */
     LavalinkManager: LavalinkManager;
 }

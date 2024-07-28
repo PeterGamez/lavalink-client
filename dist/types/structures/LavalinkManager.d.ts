@@ -188,6 +188,8 @@ export interface LavalinkManager {
     on<U extends keyof LavalinkManagerEvents>(event: U, listener: LavalinkManagerEvents[U]): this;
     /** @private */
     emit<U extends keyof LavalinkManagerEvents>(event: U, ...args: Parameters<LavalinkManagerEvents[U]>): boolean;
+    /** @private */
+    removeAllListeners(event?: keyof LavalinkManagerEvents): this;
 }
 export declare class LavalinkManager extends EventEmitter {
     /** The Options of LavalinkManager (changeable) */
