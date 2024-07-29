@@ -7,7 +7,7 @@ import { LavalinkPlayer, MiniMap } from "./Utils";
 
 type LavalinkNodeIdentifier = string;
 
-interface NodeManagerEvents {
+export interface NodeManagerEvents {
     /**
      * Emitted when a Node is created.
      * @event Manager.nodeManager#create
@@ -59,10 +59,12 @@ interface NodeManagerEvents {
 }
 
 export declare interface NodeManager {
+    /** @private */
     on<U extends keyof NodeManagerEvents>(event: U, listener: NodeManagerEvents[U]): this;
-
+    /** @private */
     emit<U extends keyof NodeManagerEvents>(event: U, ...args: Parameters<NodeManagerEvents[U]>): boolean;
-
+    /** @private */
+    removeAllListeners(event?: keyof NodeManagerEvents): this;
     /** @private */
     LavalinkManager: LavalinkManager;
 }

@@ -4,18 +4,19 @@ exports.Player = exports.DestroyReasons = void 0;
 const Filters_1 = require("./Filters");
 const Queue_1 = require("./Queue");
 const Utils_1 = require("./Utils");
-exports.DestroyReasons = {
-    QueueEmpty: "QueueEmpty",
-    NodeDestroy: "NodeDestroy",
-    NodeDeleted: "NodeDeleted",
-    LavalinkNoVoice: "LavalinkNoVoice",
-    NodeReconnectFail: "NodeReconnectFail",
-    Disconnected: "Disconnected",
-    PlayerReconnectFail: "PlayerReconnectFail",
-    ChannelDeleted: "ChannelDeleted",
-    DisconnectAllNodes: "DisconnectAllNodes",
-    ReconnectAllNodes: "ReconnectAllNodes",
-};
+var DestroyReasons;
+(function (DestroyReasons) {
+    DestroyReasons["QueueEmpty"] = "QueueEmpty";
+    DestroyReasons["NodeDestroy"] = "NodeDestroy";
+    DestroyReasons["NodeDeleted"] = "NodeDeleted";
+    DestroyReasons["LavalinkNoVoice"] = "LavalinkNoVoice";
+    DestroyReasons["NodeReconnectFail"] = "NodeReconnectFail";
+    DestroyReasons["Disconnected"] = "Disconnected";
+    DestroyReasons["PlayerReconnectFail"] = "PlayerReconnectFail";
+    DestroyReasons["ChannelDeleted"] = "ChannelDeleted";
+    DestroyReasons["DisconnectAllNodes"] = "DisconnectAllNodes";
+    DestroyReasons["ReconnectAllNodes"] = "ReconnectAllNodes";
+})(DestroyReasons || (exports.DestroyReasons = DestroyReasons = {}));
 class Player {
     guildId;
     voiceChannelId = null;
@@ -29,7 +30,10 @@ class Player {
     };
     volume = 100;
     lavalinkVolume = 100;
-    position = 0;
+    get position() {
+        return this.lastPosition + (this.lastPositionChange ? Date.now() - this.lastPositionChange : 0);
+    }
+    lastPositionChange = null;
     lastPosition = 0;
     createdTimeStamp;
     connected = false;
@@ -88,16 +92,16 @@ class Player {
         if (options?.clientTrack && (this.LavalinkManager.utils.isTrack(options?.clientTrack) || this.LavalinkManager.utils.isUnresolvedTrack(options.clientTrack))) {
             if (this.LavalinkManager.utils.isUnresolvedTrack(options.clientTrack))
                 await options.clientTrack.resolve(this);
-            if (typeof options.track.userData === "object")
-                options.clientTrack.userData = { ...(options?.clientTrack.userData || {}), ...(options.track.userData || {}) };
+            if ((typeof options.track?.userData === "object" || typeof options.clientTrack?.userData === "object") && options.clientTrack)
+                options.clientTrack.userData = { ...(options?.clientTrack.userData || {}), ...(options.track?.userData || {}) };
             await this.queue.add(options?.clientTrack, 0);
             return await this.skip();
         }
         else if (options?.track?.encoded) {
             const track = await this.node.decode.singleTrack(options.track?.encoded, options.track?.requester || this.queue?.current?.requester || this.queue.previous?.[0]?.requester || this.queue.tracks?.[0]?.requester || this.LavalinkManager.options.client);
-            if (typeof options.track.userData === "object")
-                track.userData = { ...(track.userData || {}), ...(options.track.userData || {}) };
             if (track) {
+                if (typeof options.track?.userData === "object")
+                    track.userData = { ...(track.userData || {}), ...(options.track.userData || {}) };
                 replaced = true;
                 this.queue.add(track, 0);
                 await (0, Utils_1.queueTrackEnd)(this);
@@ -107,9 +111,9 @@ class Player {
             const res = await this.search({
                 query: options?.track?.identifier,
             }, options?.track?.requester || this.queue?.current?.requester || this.queue.previous?.[0]?.requester || this.queue.tracks?.[0]?.requester || this.LavalinkManager.options.client);
-            if (typeof options.track.userData === "object")
-                res.tracks[0].userData = { ...(res.tracks[0].userData || {}), ...(options.track.userData || {}) };
             if (res.tracks[0]) {
+                if (typeof options.track?.userData === "object")
+                    res.tracks[0].userData = { ...(res.tracks[0].userData || {}), ...(options.track.userData || {}) };
                 replaced = true;
                 this.queue.add(res.tracks[0], 0);
                 await (0, Utils_1.queueTrackEnd)(this);
@@ -120,8 +124,8 @@ class Player {
         if (this.queue.current && this.LavalinkManager.utils.isUnresolvedTrack(this.queue.current)) {
             try {
                 await this.queue.current.resolve(this);
-                if (typeof options.track.userData === "object")
-                    this.queue.current.userData = { ...(this.queue.current.userData || {}), ...(options.track.userData || {}) };
+                if (typeof options.track?.userData === "object" && this.queue.current)
+                    this.queue.current.userData = { ...(this.queue.current?.userData || {}), ...(options.track?.userData || {}) };
             }
             catch (error) {
                 this.LavalinkManager.emit("trackError", this, this.queue.current, error);
@@ -189,8 +193,8 @@ class Player {
         this.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
         return this;
     }
-    async lavaSearch(query, requestUser) {
-        return this.node.lavaSearch(query, requestUser);
+    async lavaSearch(query, requestUser, throwOnEmpty = false) {
+        return this.node.lavaSearch(query, requestUser, throwOnEmpty);
     }
     async setSponsorBlock(segments = ["sponsor", "selfpromo"]) {
         return this.node.setSponsorBlock(this, segments);
@@ -201,9 +205,9 @@ class Player {
     async deleteSponsorBlock() {
         return this.node.deleteSponsorBlock(this);
     }
-    async search(query, requestUser) {
+    async search(query, requestUser, throwOnEmpty = false) {
         const Query = this.LavalinkManager.utils.transformQuery(query);
-        return this.node.search(Query, requestUser);
+        return this.node.search(Query, requestUser, throwOnEmpty);
     }
     async lavaLyrics(skipTrackSource = false) {
         const encoded = this.queue.current?.encoded;
@@ -239,7 +243,7 @@ class Player {
             throw new RangeError("Current Track is not seekable / a stream");
         if (position < 0 || position > this.queue.current.info.duration)
             position = Math.max(Math.min(position, this.queue.current.info.duration), 0);
-        this.position = position;
+        this.lastPositionChange = Date.now();
         this.lastPosition = position;
         const now = performance.now();
         await this.node.updatePlayer({ guildId: this.guildId, playerOptions: { position } });
@@ -381,6 +385,7 @@ class Player {
             textChannelId: this.textChannelId,
             position: this.position,
             lastPosition: this.lastPosition,
+            lastPositionChange: this.lastPositionChange,
             volume: this.volume,
             lavalinkVolume: this.lavalinkVolume,
             repeatMode: this.repeatMode,
@@ -391,6 +396,7 @@ class Player {
             equalizer: this.filterManager?.equalizerBands || [],
             nodeId: this.node?.id,
             ping: this.ping,
+            queue: this.queue.utils.toJSON(),
         };
     }
 }

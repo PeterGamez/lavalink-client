@@ -40,7 +40,7 @@ export class ManagerUtils {
                     identifier: data.info.identifier,
                     title: data.info.title,
                     author: data.info.author,
-                    duration: data.info.length || data.info.duration,
+                    duration: data.info.duration || data.info.length,
                     artworkUrl: data.info.artworkUrl || data.pluginInfo?.artworkUrl || data.plugin?.artworkUrl,
                     uri: data.info.uri,
                     sourceName: data.info.sourceName,
@@ -164,13 +164,19 @@ export class ManagerUtils {
             throw new Error("Lavalink Node has not 'soundcloud' enabled");
         }
         else if (SourceLinksRegexes.bandcamp.test(queryString) && !node.info?.sourceManagers?.includes("bandcamp")) {
-            throw new Error("Lavalink Node has not 'bandcamp' enabled");
+            throw new Error("Lavalink Node has not 'bandcamp' enabled (introduced with lavaplayer 2.2.0 or lavalink 4.0.6)");
         }
         else if (SourceLinksRegexes.TwitchTv.test(queryString) && !node.info?.sourceManagers?.includes("twitch")) {
             throw new Error("Lavalink Node has not 'twitch' enabled");
         }
         else if (SourceLinksRegexes.vimeo.test(queryString) && !node.info?.sourceManagers?.includes("vimeo")) {
             throw new Error("Lavalink Node has not 'vimeo' enabled");
+        }
+        else if (SourceLinksRegexes.tiktok.test(queryString) && !node.info?.sourceManagers?.includes("tiktok")) {
+            throw new Error("Lavalink Node has not 'tiktok' enabled");
+        }
+        else if (SourceLinksRegexes.mixcloud.test(queryString) && !node.info?.sourceManagers?.includes("mixcloud")) {
+            throw new Error("Lavalink Node has not 'mixcloud' enabled");
         }
         else if (SourceLinksRegexes.AllSpotifyRegex.test(queryString) && !node.info?.sourceManagers?.includes("spotify")) {
             throw new Error("Lavalink Node has not 'spotify' enabled");
@@ -199,9 +205,11 @@ export class ManagerUtils {
         return;
     }
     transformQuery(query) {
+        const sourceOfQuery = typeof query === "string" ? undefined : DefaultSources[query.source?.trim?.()?.toLowerCase?.() ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.()] ?? query.source?.trim?.()?.toLowerCase?.();
         const Query = {
             query: typeof query === "string" ? query : query.query,
-            source: DefaultSources[(typeof query === "string" ? undefined : query.source?.trim?.()?.toLowerCase?.()) ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.()] ?? (typeof query === "string" ? undefined : query.source?.trim?.()?.toLowerCase?.()) ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.(),
+            extraQueryUrlParams: typeof query !== "string" ? query.extraQueryUrlParams : undefined,
+            source: sourceOfQuery ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.(),
         };
         const foundSource = Object.keys(DefaultSources)
             .find((source) => Query.query?.toLowerCase?.()?.startsWith(`${source}:`.toLowerCase()))
@@ -214,10 +222,11 @@ export class ManagerUtils {
         return Query;
     }
     transformLavaSearchQuery(query) {
+        const sourceOfQuery = typeof query === "string" ? undefined : DefaultSources[query.source?.trim?.()?.toLowerCase?.() ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.()] ?? query.source?.trim?.()?.toLowerCase?.();
         const Query = {
             query: typeof query === "string" ? query : query.query,
             types: query.types ? ["track", "playlist", "artist", "album", "text"].filter((v) => query.types?.find((x) => x.toLowerCase().startsWith(v))) : ["track", "playlist", "artist", "album"],
-            source: DefaultSources[(typeof query === "string" ? undefined : query.source?.trim?.()?.toLowerCase?.()) ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.()] ?? (typeof query === "string" ? undefined : query.source?.trim?.()?.toLowerCase?.()) ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.(),
+            source: sourceOfQuery ?? this.LavalinkManager?.options?.playerOptions?.defaultSearchPlatform?.toLowerCase?.(),
         };
         const foundSource = Object.keys(DefaultSources)
             .find((source) => Query.query.toLowerCase().startsWith(`${source}:`.toLowerCase()))
@@ -252,20 +261,11 @@ export class ManagerUtils {
         else if (source === "dzsearch" && node.info?.sourceManagers?.includes("deezer") && !node.info?.sourceManagers?.includes("http")) {
             throw new Error("Lavalink Node has not 'http' enabled, which is required to have 'dzsearch' to work");
         }
-        else if (source === "phsearch" && !node.info?.sourceManagers?.includes("pornhub")) {
-            throw new Error("Lavalink Node has not 'pornhub' enabled, which is required to have 'phsearch' work");
-        }
         else if (source === "scsearch" && !node.info?.sourceManagers?.includes("soundcloud")) {
             throw new Error("Lavalink Node has not 'soundcloud' enabled, which is required to have 'scsearch' work");
         }
         else if (source === "speak" && !node.info?.plugins?.find((c) => c.name.toLowerCase().includes(LavalinkPlugins.DuncteBot_Plugin.toLowerCase()))) {
             throw new Error("Lavalink Node has not 'speak' enabled, which is required to have 'speak' work");
-        }
-        else if (source === "spsearch" && !node.info?.sourceManagers?.includes("spotify")) {
-            throw new Error("Lavalink Node has not 'spotify' enabled, which is required to have 'spsearch' work");
-        }
-        else if (source === "sprec" && !node.info?.sourceManagers?.includes("spotify")) {
-            throw new Error("Lavalink Node has not 'spotify' enabled, which is required to have 'sprec' work");
         }
         else if (source === "tts" && !node.info?.plugins?.find((c) => c.name.toLowerCase().includes(LavalinkPlugins.GoogleCloudTTS.toLowerCase()))) {
             throw new Error("Lavalink Node has not 'tts' enabled, which is required to have 'tts' work");

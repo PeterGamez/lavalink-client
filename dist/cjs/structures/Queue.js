@@ -70,7 +70,7 @@ class Queue {
         sync: async (override = true, dontSyncCurrent = true) => {
             const data = await this.QueueSaver.get(this.guildId);
             if (!data)
-                return console.log("No data found to sync for guildId: ", this.guildId);
+                throw new Error(`No data found to sync for guildId: ${this.guildId}`);
             if (!dontSyncCurrent && !this.current && this.managerUtils.isTrack(data.current))
                 this.current = data.current;
             if (Array.isArray(data.tracks) && data?.tracks.length && data.tracks.some((track) => this.managerUtils.isTrack(track) || this.managerUtils.isUnresolvedTrack(track)))
@@ -123,8 +123,7 @@ class Queue {
             try {
                 this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), this.tracks.length, oldStored, this.utils.toJSON());
             }
-            catch (e) {
-            }
+            catch (e) { }
         await this.utils.save();
         return this.tracks.length;
     }
@@ -139,16 +138,14 @@ class Queue {
             try {
                 this.queueChanges.tracksAdd(this.guildId, (Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v)), index, oldStored, this.utils.toJSON());
             }
-            catch (e) {
-            }
+            catch (e) { }
         let spliced = TrackOrTracks ? this.tracks.splice(index, amount, ...(Array.isArray(TrackOrTracks) ? TrackOrTracks : [TrackOrTracks]).filter((v) => this.managerUtils.isTrack(v) || this.managerUtils.isUnresolvedTrack(v))) : this.tracks.splice(index, amount);
         spliced = Array.isArray(spliced) ? spliced : [spliced];
         if (typeof this.queueChanges?.tracksRemoved === "function")
             try {
                 this.queueChanges.tracksRemoved(this.guildId, spliced, index, oldStored, this.utils.toJSON());
             }
-            catch (e) {
-            }
+            catch (e) { }
         await this.utils.save();
         return spliced.length === 1 ? spliced[0] : spliced;
     }

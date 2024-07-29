@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EQList = exports.audioOutputsData = exports.FilterManager = void 0;
 class FilterManager {
     equalizerBands = [];
-    filterUpdatedState = 0;
+    filterUpdatedState = false;
     filters = {
         volume: false,
         vaporwave: false,
@@ -121,6 +121,8 @@ class FilterManager {
                 delete sendData[key];
         }
         const now = performance.now();
+        if (this.player.options.instaUpdateFiltersFix === true)
+            this.filterUpdatedState = true;
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
@@ -128,8 +130,6 @@ class FilterManager {
             },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-        if (this.player.options.instaUpdateFiltersFix === true)
-            this.filterUpdatedState = 1;
         return;
     }
     checkFiltersState(oldFilterTimescale) {
@@ -496,6 +496,8 @@ class FilterManager {
         if (!this.player.node.sessionId)
             throw new Error("The Lavalink-Node is either not ready or not up to date");
         const now = performance.now();
+        if (this.player.options.instaUpdateFiltersFix === true)
+            this.filterUpdatedState = true;
         await this.player.node.updatePlayer({
             guildId: this.player.guildId,
             playerOptions: {
@@ -503,8 +505,6 @@ class FilterManager {
             },
         });
         this.player.ping.lavalink = Math.round((performance.now() - now) / 10) / 100;
-        if (this.player.options.instaUpdateFiltersFix === true)
-            this.filterUpdatedState = 1;
         return this;
     }
     async clearEQ() {
