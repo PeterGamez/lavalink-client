@@ -5,7 +5,7 @@ import type { Base64 } from "./Utils";
 /** Sourcenames provided by lavalink server */
 export type LavalinkSourceNames = "youtube" | "youtubemusic" | "soundcloud" | "bandcamp" | "twitch";
 /** Source Names provided by lava src plugin */
-export type LavalinkPlugin_LavaSrc_SourceNames = "deezer" |  "spotify" | "applemusic" | "yandexmusic" | "flowery-tts";
+export type LavalinkPlugin_LavaSrc_SourceNames = "deezer" | "spotify" | "applemusic" | "yandexmusic" | "flowery-tts";
 /** Source Names provided by jiosaavan plugin */
 export type LavalinkPlugin_JioSaavn_SourceNames = "jiosaavn";
 /** The SourceNames provided by lavalink */
@@ -57,8 +57,6 @@ export interface TrackInfo {
     isrc: string | null;
 }
 
-
-
 export interface PluginInfo {
     /** The Type provided by a plugin */
     type?: "album" | "playlist" | "artist" | "recommendations" | string;
@@ -85,16 +83,15 @@ export interface PluginInfo {
     /** The Author Information provided by a plugin */
     author?: string;
     /** The Url provided by a Plugin */
-    url?: string,
+    url?: string;
     /** The Url provided by a Plugin */
-    uri?: string,
+    uri?: string;
     /** You can put specific track information here, to transform the tracks... */
     clientData?: {
         /* If provided and true, then this track won't get added to the previous array */
         previousTrack?: boolean;
-
-        [key:string] : any;
-    },
+        [key: string]: any;
+    };
 }
 
 export interface LavalinkTrack {
@@ -121,7 +118,6 @@ export interface Track {
     userData?: anyObject;
 }
 
-
 export interface UnresolvedTrackInfo extends Partial<TrackInfo> {
     /** Required */
     title: string;
@@ -132,7 +128,7 @@ export interface UnresolvedQuery extends UnresolvedTrackInfo {
 }
 export interface UnresolvedTrack {
     /** Required */
-    resolve: (player:Player) => Promise<void>;
+    resolve: (player: Player) => Promise<void>;
     /** The Base 64 encoded String */
     encoded?: Base64;
     /** Track Information */

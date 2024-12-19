@@ -74,9 +74,10 @@ export class NodeManager extends EventEmitter {
         super();
         this.LavalinkManager = LavalinkManager;
 
-        if (this.LavalinkManager.options.nodes) this.LavalinkManager.options.nodes.forEach(node => {
-            this.createNode(node);
-        });
+        if (this.LavalinkManager.options.nodes)
+            this.LavalinkManager.options.nodes.forEach((node) => {
+                this.createNode(node);
+            });
     }
 
     /**
@@ -87,7 +88,7 @@ export class NodeManager extends EventEmitter {
      */
     public async disconnectAll(deleteAllNodes = false, destroyPlayers = true) {
         if (!this.nodes.size) throw new Error("There are no nodes to disconnect (no nodes in the nodemanager)");
-        if (!this.nodes.filter(v => v.connected).size) throw new Error("There are no nodes to disconnect (all nodes disconnected)");
+        if (!this.nodes.filter((v) => v.connected).size) throw new Error("There are no nodes to disconnect (all nodes disconnected)");
         let counter = 0;
         for (const node of this.nodes.values()) {
             if (!node.connected) continue;
@@ -107,7 +108,7 @@ export class NodeManager extends EventEmitter {
      */
     public async connectAll(): Promise<number> {
         if (!this.nodes.size) throw new Error("There are no nodes to connect (no nodes in the nodemanager)");
-        if (!this.nodes.filter(v => !v.connected).size) throw new Error("There are no nodes to connect (all nodes connected)");
+        if (!this.nodes.filter((v) => !v.connected).size) throw new Error("There are no nodes to connect (all nodes connected)");
         let counter = 0;
         for (const node of this.nodes.values()) {
             if (node.connected) continue;
@@ -153,34 +154,41 @@ export class NodeManager extends EventEmitter {
     public leastUsedNodes(sortType: "memory" | "cpuLavalink" | "cpuSystem" | "calls" | "playingPlayers" | "players" = "players"): LavalinkNode[] {
         const connectedNodes = Array.from(this.nodes.values()).filter((node) => node.connected);
         switch (sortType) {
-            case "memory": {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)) // sort after memor
-            } break;
-            case "cpuLavalink": {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0)) // sort after memor
-            } break;
-            case "cpuSystem": {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0)) // sort after memor
-            } break;
-            case "calls": {
-                return connectedNodes
-                    .sort((a, b) => a.calls - b.calls); // client sided sorting
-            } break;
-            case "playingPlayers": {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.playingPlayers || 0) - (b.stats?.playingPlayers || 0))
-            } break;
-            case "players": {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0))
-            } break;
-            default: {
-                return connectedNodes
-                    .sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0))
-            } break;
+            case "memory":
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.memory?.used || 0) - (b.stats?.memory?.used || 0)); // sort after memor
+                }
+                break;
+            case "cpuLavalink":
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.cpu?.lavalinkLoad || 0) - (b.stats?.cpu?.lavalinkLoad || 0)); // sort after memor
+                }
+                break;
+            case "cpuSystem":
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.cpu?.systemLoad || 0) - (b.stats?.cpu?.systemLoad || 0)); // sort after memor
+                }
+                break;
+            case "calls":
+                {
+                    return connectedNodes.sort((a, b) => a.calls - b.calls); // client sided sorting
+                }
+                break;
+            case "playingPlayers":
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.playingPlayers || 0) - (b.stats?.playingPlayers || 0));
+                }
+                break;
+            case "players":
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
+                }
+                break;
+            default:
+                {
+                    return connectedNodes.sort((a, b) => (a.stats?.players || 0) - (b.stats?.players || 0));
+                }
+                break;
         }
     }
 
@@ -189,7 +197,7 @@ export class NodeManager extends EventEmitter {
      * @param node The node to delete
      * @returns
      */
-    deleteNode(node: LavalinkNodeIdentifier | LavalinkNode):void {
+    deleteNode(node: LavalinkNodeIdentifier | LavalinkNode): void {
         const decodeNode = typeof node === "string" ? this.nodes.get(node) : node || this.leastUsedNodes()[0];
         if (!decodeNode) throw new Error("Node was not found");
         decodeNode.destroy(DestroyReasons.NodeDeleted);
