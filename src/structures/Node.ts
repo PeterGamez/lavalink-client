@@ -501,7 +501,10 @@ export class LavalinkNode {
         this.reconnectAttempts = 1;
         clearTimeout(this.reconnectTimeout);
 
-        if (!reconnect) this.reconnected = false
+        if (!reconnect) {
+            this.reconnected = false;
+            clearInterval(this.heartBeatInterval);
+        }
 
         if (deleteNode) {
             this.NodeManager.emit("destroy", this, destroyReason);
@@ -534,7 +537,10 @@ export class LavalinkNode {
         this.reconnectAttempts = 1;
         clearTimeout(this.reconnectTimeout);
 
-        if (!reconnect) this.reconnected = false;
+        if (!reconnect) {
+            this.reconnected = false;
+            clearInterval(this.heartBeatInterval);
+        }
 
         this.NodeManager.emit("disconnect", this, { code: 1000, reason: disconnectReason });
     }
