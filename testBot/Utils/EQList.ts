@@ -1,1 +1,0 @@
-export { EQList } from "../../src";

@@ -18,9 +18,7 @@ export default [
     {
         ignores: [
             "**/dist",
-            "**/docs",
             "**/node_modules",
-            "**/testBot",
             "**/tools",
             "eslint.config.mjs",
         ],
