@@ -18,6 +18,8 @@
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "test": "node -v",
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "format": "prettier --write src/**/*.ts --config ./.prettierrc.js"
   },
   "exports": {
