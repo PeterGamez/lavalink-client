@@ -20,6 +20,7 @@ export default [
             "**/dist",
             "**/node_modules",
             "**/tools",
+            ".prettierrc.js",
             "eslint.config.mjs",
         ],
     },
